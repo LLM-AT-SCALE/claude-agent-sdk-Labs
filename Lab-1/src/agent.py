@@ -12,6 +12,7 @@ specify. Part B is a loop the model drives, and you can watch it think.
 from __future__ import annotations
 
 import os
+import shutil
 from pathlib import Path
 
 from claude_agent_sdk import (
@@ -21,6 +22,22 @@ from claude_agent_sdk import (
     TextBlock,
     query,
 )
+
+# The Agent SDK does not bundle a binary — it drives the Claude Code CLI as a
+# subprocess. Missing it produces a bare "Claude Code not found", which is not
+# much help mid-lab, so check for it up front and say what to run.
+CLI_INSTALL_HINT = (
+    "The Claude Code CLI is not on PATH, and the Agent SDK runs it as a "
+    "subprocess. Install it with:\n\n"
+    "    npm install -g @anthropic-ai/claude-code\n\n"
+    "In Colab this happens in Step 1 — re-run that cell if you skipped it."
+)
+
+
+def ensure_cli_available() -> None:
+    """Raise a readable error if the Claude Code CLI is missing."""
+    if shutil.which("claude") is None and shutil.which("claude.cmd") is None:
+        raise RuntimeError(CLI_INSTALL_HINT)
 
 MODEL = "claude-opus-5"
 
@@ -62,6 +79,8 @@ async def run_agent(narrative_path: Path, workspace: Path):
     The caller sets it from the run-time prompt just before calling this, and
     clears it afterwards — see main.py.
     """
+    ensure_cli_available()
+
     prompt = (
         f"Score the loan application in {narrative_path.name} against rubric.json, "
         f"then write your credit memo to credit_memo.md."
