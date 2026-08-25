@@ -15,7 +15,7 @@
 
   --ink: #17150f;
   --ink-soft: #4a463c;
-  --ink-faint: #837c6c;
+  --ink-faint: #6f6857;
 
   --rule: #ddd7c8;
   --rule-strong: #c2baa5;
@@ -30,7 +30,7 @@
   --score-3: #8f5c0b;
   --score-4: #3c7a55;
   --score-5: #2e6f45;
-  --score-ne: #837c6c;
+  --score-ne: #6f6857;
 
   --font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
   --font-sans: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
@@ -65,8 +65,15 @@
   padding-bottom: 5rem;
 }
 
+/* Set the face broadly, but the colour only at the root — painting every
+   div/p/span ink-black also paints the label inside a dark button, which
+   renders as a solid black rectangle with invisible text. Let colour
+   inherit instead, so components that set their own still win. */
 html, body, .stApp, p, div, span, label, li, td, th {
   font-family: var(--font-sans);
+}
+
+html, body, .stApp {
   color: var(--ink);
 }
 
@@ -367,6 +374,25 @@ div[data-testid="stFileUploadDropzone"] {
   transition: opacity 0.18s var(--ease), transform 0.18s var(--ease);
 }
 .stButton > button:hover { opacity: 0.86; transform: translateY(-1px); }
+
+/* Streamlit nests the label in its own <p>/<div>, which would otherwise
+   inherit ink and disappear against the dark fill. */
+.stButton > button *,
+.stButton > button p,
+.stButton > button div,
+.stButton > button span,
+.stButton > button [data-testid="stMarkdownContainer"] {
+  color: var(--paper) !important;
+  font-family: var(--font-mono) !important;
+}
+
+.stDownloadButton > button *,
+.stDownloadButton > button p,
+.stDownloadButton > button div,
+.stDownloadButton > button span {
+  color: var(--ink-soft) !important;
+  font-family: var(--font-mono) !important;
+}
 .stDownloadButton > button {
   background: transparent !important; color: var(--ink-soft) !important;
   border: 1px solid var(--rule-strong) !important; border-radius: var(--radius) !important;
