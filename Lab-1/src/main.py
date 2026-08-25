@@ -3,16 +3,18 @@
 The API key is prompted here, at run time, in a password field. It is validated
 once, held in session state for the life of the browser session, and never
 written to disk.
+
+Markup lives in src/ui.py so this file reads as flow rather than HTML.
 """
 
 from __future__ import annotations
 
 import asyncio
-import json
 from pathlib import Path
 
 import streamlit as st
 
+from src import ui
 from src.agent import clear_api_key, run_agent, set_api_key
 from src.ingestion import SUPPORTED_EXTENSIONS, UnreadableDocument, extract_text
 from src.model import score_application
@@ -22,40 +24,51 @@ from src.validate import validate_anthropic_key
 LAB_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = LAB_DIR / "data"
 
-DECISION_COLOURS = {
-    "APPROVE": "#1E7B44",
-    "APPROVE WITH CONDITIONS": "#2F6F8F",
-    "REFER TO CREDIT COMMITTEE": "#A8690E",
-    "DECLINE": "#A32A2A",
-}
-
 
 def sidebar() -> None:
     with st.sidebar:
-        st.markdown("### Lab 1")
-        st.markdown("**Loan Application Evaluation**")
-        st.markdown("Claude Agent SDK + Messages API")
-        st.markdown("---")
         st.markdown(
-            "**Part A** scores the application in one Messages API call.\n\n"
-            "**Part B** hands the same application to an agent that reads the "
-            "files, works through the rubric and writes a memo itself."
-        )
-        st.markdown("---")
-        st.caption(
-            "Your API key is requested at run time, used for this session only, "
-            "and never stored."
+            """
+            <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;
+                        text-transform:uppercase;color:var(--ink-faint);">Lab 1</div>
+            <div style="font-family:var(--font-display);font-size:26px;line-height:1.1;
+                        margin:6px 0 2px;">Claude<br>Agentic SDK</div>
+            <div style="font-size:12.5px;color:var(--ink-soft);">Loan Application Evaluation</div>
+            <div style="height:1px;background:var(--rule-strong);margin:20px 0;"></div>
+
+            <div style="font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;
+                        text-transform:uppercase;color:var(--ink-faint);">Part A</div>
+            <p style="font-size:13px;line-height:1.55;color:var(--ink-soft);margin:4px 0 16px;">
+              One <strong>Messages API</strong> call. The task is fully specified, so Claude
+              returns structured JSON and Python does the arithmetic.</p>
+
+            <div style="font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;
+                        text-transform:uppercase;color:var(--ink-faint);">Part B</div>
+            <p style="font-size:13px;line-height:1.55;color:var(--ink-soft);margin:4px 0 16px;">
+              The <strong>Agent SDK</strong> gets a folder and tools. It decides its own
+              steps and writes the memo itself.</p>
+
+            <div style="height:1px;background:var(--rule);margin:18px 0;"></div>
+            <p style="font-size:11.5px;line-height:1.55;color:var(--ink-faint);margin:0;">
+              Your API key is requested at run time, used for this session only, and never
+              stored.</p>
+            """,
+            unsafe_allow_html=True,
         )
 
 
 def api_key_gate() -> str | None:
     """Prompt for the key and validate it. Returns the key once it is good."""
-    col1, col2 = st.columns([1, 2])
+    ui.section("§ 01", "Authentication", "Prompted at run time — never stored in the repository.")
 
+    col1, col2 = st.columns([2, 3])
     with col1:
-        st.markdown("#### Anthropic API key")
-        st.caption("Prompted at run time — never stored in the repository.")
-
+        st.markdown(
+            '<div style="font-size:14px;font-weight:600;margin-top:6px;">Anthropic API key</div>'
+            '<div style="font-size:12.5px;color:var(--ink-faint);">'
+            'console.anthropic.com &rarr; API keys</div>',
+            unsafe_allow_html=True,
+        )
     with col2:
         vAR_api_key = st.text_input(
             "Anthropic API key",
@@ -65,7 +78,7 @@ def api_key_gate() -> str | None:
         )
 
     if not vAR_api_key:
-        st.info("Enter your Anthropic API key above to begin.")
+        st.info("Enter your Anthropic API key to begin.")
         return None
 
     # Validate once per key, then remember the verdict for this session.
@@ -74,9 +87,9 @@ def api_key_gate() -> str | None:
             message = validate_anthropic_key(vAR_api_key)
         st.session_state["validated_key"] = vAR_api_key
         st.session_state["validation_message"] = message
+        st.session_state.pop("result", None)
 
     message = st.session_state.get("validation_message", "")
-
     if message != "Valid API Key!":
         st.warning(message)
         return None
@@ -86,7 +99,6 @@ def api_key_gate() -> str | None:
 
 
 def sample_files() -> list[str]:
-    """Every sample shipped with the lab, in a stable order."""
     names = [
         p.name
         for p in DATA_DIR.iterdir()
@@ -95,14 +107,16 @@ def sample_files() -> list[str]:
     return sorted(names)
 
 
-def choose_narrative() -> tuple[str, str] | None:
-    """Let the user upload an application or pick one of the samples.
+def choose_application() -> tuple[str, str] | None:
+    """Upload an application or pick a sample. PDF, DOCX and TXT are all read."""
+    ui.section(
+        "§ 02",
+        "The application",
+        "A loan application arrives as a PDF or a Word document, so both are read here. "
+        "There is no OCR — a scanned PDF has no text layer and is rejected rather than guessed at.",
+    )
 
-    A real application arrives as a PDF or a Word document, so both are read
-    here; .txt is accepted too because it makes the samples easy to inspect.
-    """
     col1, col2 = st.columns(2)
-
     with col1:
         uploaded = st.file_uploader(
             "Upload a loan application (PDF or DOCX)",
@@ -128,96 +142,53 @@ def choose_narrative() -> tuple[str, str] | None:
         return None
 
 
-def render_result(result: dict, rubric: dict) -> None:
-    """Show the decision, the arithmetic, and the per-C detail."""
+def render_result(result: dict, rubric: dict, filename: str) -> None:
     summary = aggregate(result["scores"], rubric)
-    colour = DECISION_COLOURS.get(summary["decision"], "#3E4C59")
 
+    ui.decision_panel(summary)
+
+    ui.section("§ 04", "Application", "Read from the narrative for context. None of it is scored.")
+    ui.application_header(result, filename)
+
+    ui.section("§ 05", "Financial metrics",
+               "DSCR, LTV and equity injection as Claude read them out of the narrative.")
+    ui.metrics_row(result.get("metrics", {}))
+
+    ui.section("§ 06", "The five C's",
+               "Each C earns (score ÷ 5) × weight. Claude chose the level; the arithmetic is Python.")
+    ui.score_ledger(summary, rubric)
+
+    ui.section("§ 07", "Why each score",
+               "Open a C to see the rubric level it matched and the sentence that supports it.")
+    ui.criterion_detail(result, rubric)
+
+
+def part_a(narrative: str, rubric: dict, api_key: str, filename: str) -> None:
     st.markdown(
-        f"<div style='padding:18px 22px;border-radius:4px;background:{colour};"
-        f"color:#fff;margin-bottom:18px;'>"
-        f"<div style='font-size:11px;letter-spacing:.14em;opacity:.85;'>DECISION</div>"
-        f"<div style='font-size:30px;font-weight:700;'>{summary['decision']}</div>"
-        f"<div style='font-size:14px;opacity:.9;margin-top:6px;'>"
-        f"Weighted score {summary['total']} / 100</div></div>",
+        '<p class="sec-note" style="margin-top:6px;">The task is fully specified, so one '
+        'call is the right tool. Claude returns structured JSON; the weighted arithmetic '
+        'runs in Python so the maths is identical every time.</p>',
         unsafe_allow_html=True,
     )
 
-    if summary["overridden_by"]:
-        st.error(
-            f"Hard rule {summary['overridden_by']} set this decision. "
-            f"The weighted score of {summary['total']} would otherwise have banded as "
-            f"{summary['banded_decision']}. {summary['note']}"
-        )
-    else:
-        st.caption(summary["note"])
-
-    if summary["is_incomplete"]:
-        st.warning(
-            "INCOMPLETE — one or more C's had no supporting evidence. Their weight was "
-            "left out of the total rather than counted as zero."
-        )
-
-    st.markdown("#### Application")
-    left, middle, right = st.columns(3)
-    left.metric("Borrower", result.get("borrower", "Not stated"))
-    middle.metric("Amount", result.get("loan_amount", "Not stated"))
-    right.metric("DSCR", result.get("metrics", {}).get("dscr", "Not stated"))
-
-    st.markdown("#### The five C's")
-    st.caption(
-        f"{summary['earned']} ÷ {summary['evidenced_weight']} × 100 = "
-        f"{summary['raw_total']} → {summary['total']}"
-    )
-
-    table = [
-        {
-            "C": row["id"],
-            "Criterion": row["name"],
-            "Score": "N/E" if row.get("score") is None else row["score"],
-            "Weight": row["weight"],
-            "Points": "—" if row["points"] is None else round(row["points"], 1),
-        }
-        for row in summary["rows"]
-    ]
-    st.dataframe(table, use_container_width=True, hide_index=True)
-
-    st.markdown("#### Why each score")
-    for row in result["scores"]:
-        section = next((r for r in rubric["rubrics"] if r["id"] == row["id"]), None)
-        label = section["name"] if section else row["id"]
-        score = "N/E" if row.get("score") is None else f"{row['score']} / 5"
-        with st.expander(f"{row['id']} · {label} — {score}"):
-            st.write(row.get("rationale", ""))
-            if row.get("evidence"):
-                st.markdown(f"> _{row['evidence']}_")
-
-
-def part_a(narrative: str, rubric: dict, api_key: str) -> None:
-    st.markdown("### Part A — one Messages API call")
-    st.caption(
-        "The task is fully specified, so a single call is the right tool. "
-        "Claude returns structured JSON; the weighted arithmetic is done in Python."
-    )
-
-    if st.button("Score the application", type="primary", key="score_btn"):
+    if st.button("Score the application", key="score_btn"):
         with st.spinner("Scoring against the rubric..."):
             try:
-                result = score_application(narrative, rubric, api_key)
+                st.session_state["result"] = score_application(narrative, rubric, api_key)
             except Exception as exc:  # noqa: BLE001 - surfaced to the student
                 st.error(f"The call failed: {exc}")
                 return
-        st.session_state["result"] = result
 
     if st.session_state.get("result"):
-        render_result(st.session_state["result"], rubric)
+        render_result(st.session_state["result"], rubric, filename)
 
 
 def part_b(filename: str, narrative: str, api_key: str) -> None:
-    st.markdown("### Part B — the Claude Agent SDK")
-    st.caption(
-        "The same application, handed to an agent with a folder and tools. "
-        "It decides its own steps and writes the memo itself."
+    st.markdown(
+        '<p class="sec-note" style="margin-top:6px;">The same application, handed to an '
+        'agent with a folder and tools. Watch the tool calls — that is the agent loop, '
+        'made visible.</p>',
+        unsafe_allow_html=True,
     )
 
     workspace = LAB_DIR / "outputs"
@@ -226,12 +197,12 @@ def part_b(filename: str, narrative: str, api_key: str) -> None:
         (LAB_DIR / "rubric.json").read_text(encoding="utf-8"), encoding="utf-8"
     )
 
-    # The agent reads text, so hand it the extracted narrative rather than the
-    # original binary — a .pdf holding plain text would only confuse it.
+    # The agent's tools read text, so hand it the extracted narrative rather
+    # than the original binary.
     narrative_path = workspace / f"{Path(filename).stem}.txt"
     narrative_path.write_text(narrative, encoding="utf-8")
 
-    if st.button("Run the agent", type="primary", key="agent_btn"):
+    if st.button("Run the agent", key="agent_btn"):
         log = st.empty()
         lines: list[str] = []
 
@@ -239,7 +210,7 @@ def part_b(filename: str, narrative: str, api_key: str) -> None:
             async for kind, text in run_agent(narrative_path, workspace):
                 prefix = {"tool": "→ ", "result": "✓ ", "text": ""}[kind]
                 lines.append(prefix + text)
-                log.markdown("\n\n".join(lines[-40:]))
+                log.markdown(ui.agent_log(lines[-40:]), unsafe_allow_html=True)
 
         set_api_key(api_key)
         try:
@@ -251,45 +222,38 @@ def part_b(filename: str, narrative: str, api_key: str) -> None:
 
         memo = workspace / "credit_memo.md"
         if memo.exists():
-            st.success("The agent wrote credit_memo.md.")
-            st.markdown("#### Credit memo")
-            st.markdown(memo.read_text(encoding="utf-8"))
-            st.download_button(
-                "Download the memo",
-                memo.read_text(encoding="utf-8"),
-                file_name="credit_memo.md",
-            )
+            text = memo.read_text(encoding="utf-8")
+            ui.section("§ 04", "Credit memo", "Written by the agent, not by this application.")
+            st.markdown(text)
+            st.download_button("Download the memo", text, file_name="credit_memo.md")
 
 
 def main() -> None:
+    ui.load_css()
     sidebar()
-
-    st.markdown("## Loan Application Evaluation")
-    st.caption(
-        "Score a commercial loan application against the Five C's of Credit — "
-        "first with a single Messages API call, then with the Claude Agent SDK."
-    )
-    st.markdown("---")
+    ui.masthead()
 
     api_key = api_key_gate()
     if not api_key:
         return
 
-    st.markdown("---")
-    selection = choose_narrative()
+    selection = choose_application()
     if selection is None:
-        st.info("Upload a narrative or choose a sample to continue.")
+        st.info("Upload an application or choose a sample to continue.")
         return
 
     filename, narrative = selection
-    with st.expander(f"Narrative — {filename}"):
+    with st.expander(f"Narrative — {filename}  ({len(narrative):,} characters read)"):
         st.text(narrative)
 
     rubric = load_rubric()
-    st.markdown("---")
+
+    ui.section("§ 03", "Score it",
+               "The same application, scored two ways. Part A specifies the task; Part B "
+               "hands it to an agent.")
 
     tab_a, tab_b = st.tabs(["Part A — Messages API", "Part B — Agent SDK"])
     with tab_a:
-        part_a(narrative, rubric, api_key)
+        part_a(narrative, rubric, api_key, filename)
     with tab_b:
         part_b(filename, narrative, api_key)

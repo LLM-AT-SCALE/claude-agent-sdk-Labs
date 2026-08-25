@@ -1,0 +1,18 @@
+# Base theme. The detailed design system lives in style/final.css; these values
+# colour the widgets Streamlit renders itself, so the two agree.
+
+[theme]
+base = "light"
+primaryColor = "#17150F"
+backgroundColor = "#F5F2EA"
+secondaryBackgroundColor = "#FBF9F4"
+textColor = "#17150F"
+font = "sans serif"
+
+[server]
+headless = true
+enableXsrfProtection = false
+enableCORS = false
+
+[browser]
+gatherUsageStats = false

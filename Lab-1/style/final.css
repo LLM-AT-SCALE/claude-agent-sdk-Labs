@@ -1,53 +1,464 @@
-/* Lab 1 — Loan Application Evaluation
-   Kept deliberately light so the lab reads the same on any Streamlit theme.
-   Drop your organisation's stylesheet in here to rebrand. */
+/* ==========================================================================
+   Lab 1 — Loan Application Evaluation
+
+   Editorial ledger: warm paper ground, ink type, hairline rules, tabular
+   figures. The only saturated colour in the interface is the decision itself,
+   so the verdict is the one thing the eye lands on.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --paper: #f5f2ea;
+  --paper-raised: #fbf9f4;
+  --paper-sunk: #efebe0;
+
+  --ink: #17150f;
+  --ink-soft: #4a463c;
+  --ink-faint: #837c6c;
+
+  --rule: #ddd7c8;
+  --rule-strong: #c2baa5;
+
+  --approve: #2e6f45;
+  --conditions: #2c6480;
+  --refer: #8f5c0b;
+  --decline: #9b2c2c;
+
+  --score-1: #9b2c2c;
+  --score-2: #a8551f;
+  --score-3: #8f5c0b;
+  --score-4: #3c7a55;
+  --score-5: #2e6f45;
+  --score-ne: #837c6c;
+
+  --font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SF Mono', ui-monospace, monospace;
+
+  --radius: 2px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* --------------------------------------------------------------- ground -- */
+
+.stApp {
+  background: var(--paper);
+}
+
+/* Paper grain — felt rather than seen */
+.stApp::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
 
 .block-container {
-  padding-top: 2.2rem;
-  padding-bottom: 3rem;
-  max-width: 1180px;
+  position: relative;
+  z-index: 1;
+  max-width: 1120px;
+  padding-top: 2.6rem;
+  padding-bottom: 5rem;
 }
 
-h2 {
-  font-weight: 700;
-  letter-spacing: -0.01em;
+html, body, .stApp, p, div, span, label, li, td, th {
+  font-family: var(--font-sans);
+  color: var(--ink);
 }
 
-/* Section headings inside the lab body */
-h4 {
-  margin-top: 0.4rem;
-  font-size: 1rem;
-  letter-spacing: 0.02em;
-  color: #3e4c59;
+#MainMenu, footer, header[data-testid="stHeader"] { visibility: hidden; }
+
+/* ---------------------------------------------------------- typography -- */
+
+.masthead-title {
+  font-family: var(--font-display);
+  font-size: clamp(34px, 5vw, 50px);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--ink);
 }
 
-/* The API key field — visually distinct, since it is the one secret input */
-input[type="password"] {
-  font-family: ui-monospace, "IBM Plex Mono", "SF Mono", monospace;
-  letter-spacing: 0.08em;
+.masthead-title em { font-style: italic; }
+
+.masthead-tagline {
+  margin: 10px 0 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 60ch;
 }
 
-/* Quoted evidence pulled from the narrative */
-blockquote {
-  border-left: 3px solid #c8ced4;
-  padding-left: 14px;
-  color: #4a463c;
-  font-style: italic;
+.masthead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 18px;
+  border-bottom: 2px solid var(--ink);
+  margin-bottom: 8px;
 }
 
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.badge-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--approve); flex: none;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* section head: § 01 marginalia + serif title + hairline */
+.sec {
+  display: flex; align-items: baseline; gap: 14px;
+  margin: 40px 0 4px;
+}
+.sec-mark {
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 500; letter-spacing: 0.12em;
+  color: var(--ink-faint); flex: none;
+}
+.sec-title {
+  font-family: var(--font-display);
+  font-size: 25px; font-weight: 400; letter-spacing: -0.01em;
+  margin: 0; line-height: 1.15;
+}
+.sec-note {
+  margin: 6px 0 0 0;
+  font-size: 13.5px; color: var(--ink-soft); max-width: 72ch;
+}
+.sec-rule {
+  height: 1px; background: var(--rule-strong);
+  margin: 14px 0 20px;
+}
+
+/* ----------------------------------------------------- decision panel -- */
+
+.decision {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 30px;
+  padding: 26px 30px 24px 34px;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 2px rgb(23 21 15 / 0.05), 0 12px 32px -18px rgb(23 21 15 / 0.28);
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+/* the one saturated element in the interface */
+.decision-spine {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+  background: var(--ink);
+}
+
+.decision-verdict { min-width: 0; }
+
+.decision-word {
+  font-family: var(--font-display);
+  font-size: clamp(30px, 4.4vw, 42px);
+  line-height: 1.02; letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 6px 0 0;
+}
+
+.decision-note {
+  margin: 12px 0 0; font-size: 14px; line-height: 1.55;
+  color: var(--ink-soft); max-width: 58ch;
+}
+
+.score-block {
+  text-align: right; flex: none;
+  padding-left: 28px; border-left: 1px solid var(--rule);
+}
+.score-value {
+  font-family: var(--font-display);
+  font-size: 74px; line-height: 0.86; letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums; display: block;
+}
+.score-outof {
+  font-family: var(--font-mono); font-size: 11.5px;
+  color: var(--ink-faint); letter-spacing: 0.08em;
+}
+.score-working {
+  margin-top: 9px; font-family: var(--font-mono); font-size: 10.5px;
+  line-height: 1.6; color: var(--ink-faint);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+
+.flags { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.flag {
+  display: inline-flex; align-items: center; padding: 3px 9px;
+  border-radius: var(--radius);
+  font-family: var(--font-mono); font-size: 9.5px; font-weight: 500;
+  letter-spacing: 0.13em; text-transform: uppercase;
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+.flag-incomplete { color: var(--refer); }
+.flag-override { color: var(--decline); }
+
+.callout {
+  margin-top: 16px; padding: 13px 16px;
+  border-left: 3px solid var(--rule-strong);
+  background: var(--paper-sunk);
+  font-size: 13.5px; line-height: 1.55;
+}
+
+/* ------------------------------------------------------------- ledger -- */
+
+.ledger { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 2px; }
+.ledger thead th {
+  padding: 0 12px 8px; text-align: left;
+  border-bottom: 1px solid var(--rule-strong);
+  font-family: var(--font-mono); font-size: 9.5px; font-weight: 500;
+  letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink-faint);
+  white-space: nowrap;
+}
+.ledger thead th:first-child, .ledger td:first-child { padding-left: 0; }
+.ledger thead th:last-child, .ledger td:last-child { padding-right: 0; }
+.ledger td {
+  padding: 13px 12px; border-bottom: 1px solid var(--rule); vertical-align: middle;
+}
+.ledger tbody tr:last-child td { border-bottom: 1px solid var(--rule-strong); }
+
+.led-mark { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); width: 34px; }
+.led-name { font-weight: 600; font-size: 15px; white-space: nowrap; }
+.led-q {
+  display: block; font-weight: 400; font-size: 12.5px; color: var(--ink-faint);
+  white-space: normal; max-width: 34ch; margin-top: 1px;
+}
+.led-fig {
+  font-family: var(--font-mono); font-variant-numeric: tabular-nums;
+  font-size: 13px; text-align: right; white-space: nowrap;
+}
+.led-muted { color: var(--ink-faint); }
+
+.chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 30px; height: 26px; padding: 0 8px;
+  border-radius: var(--radius); background: var(--score-ne);
+  color: var(--paper-raised);
+  font-family: var(--font-mono); font-size: 13px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.chip-lg { min-width: 42px; height: 32px; font-size: 15px; }
+
+.bar {
+  position: relative; width: 92px; height: 5px;
+  background: var(--rule); border-radius: 999px; overflow: hidden;
+}
+.bar-fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--ink-faint); }
+
+.totals td {
+  padding: 14px 12px 0; font-family: var(--font-mono); font-size: 12.5px;
+  font-variant-numeric: tabular-nums; color: var(--ink-soft); border: 0;
+}
+.total-label {
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+
+/* -------------------------------------------------------- metric cards -- */
+
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1px; background: var(--rule); border: 1px solid var(--rule);
+  border-radius: var(--radius); overflow: hidden; }
+.metric { padding: 18px 20px; background: var(--paper-raised); }
+.metric-label { font-size: 13.5px; font-weight: 600; }
+.metric-value {
+  font-family: var(--font-display); font-size: 30px; line-height: 1.05;
+  font-variant-numeric: tabular-nums; letter-spacing: -0.02em; margin-top: 4px;
+}
+.metric-absent { color: var(--ink-faint); font-size: 22px; }
+.metric-sub {
+  margin-top: 4px; font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint);
+}
+
+/* --------------------------------------------------------- pull quote -- */
+
+.quote {
+  margin: 8px 0 0; padding-left: 15px; border-left: 2px solid var(--rule-strong);
+  font-family: var(--font-display); font-style: italic; font-size: 16px;
+  line-height: 1.5; color: var(--ink-soft);
+}
+.quote-label {
+  display: block; margin-bottom: 3px; font-family: var(--font-mono);
+  font-style: normal; font-size: 9.5px; font-weight: 500; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+
+.rationale { font-size: 14px; line-height: 1.6; margin: 0; }
+
+/* ------------------------------------------------- streamlit widgets -- */
+
+/* sidebar */
 section[data-testid="stSidebar"] {
-  border-right: 1px solid #e4dfd8;
+  background: var(--paper-sunk);
+  border-right: 1px solid var(--rule-strong);
+}
+section[data-testid="stSidebar"] .block-container { padding-top: 2rem; }
+
+/* the API key field — the one secret input, so it gets mono + spacing */
+.stTextInput input {
+  font-family: var(--font-mono) !important;
+  letter-spacing: 0.08em;
+  background: var(--paper-raised) !important;
+  border: 1px solid var(--rule-strong) !important;
+  border-radius: var(--radius) !important;
+  color: var(--ink) !important;
+}
+.stTextInput input:focus { border-color: var(--ink) !important; box-shadow: none !important; }
+
+/* uploader + selectbox */
+section[data-testid="stFileUploaderDropzone"],
+div[data-testid="stFileUploadDropzone"] {
+  background: var(--paper-raised) !important;
+  border: 1px dashed var(--rule-strong) !important;
+  border-radius: var(--radius) !important;
+}
+.stSelectbox div[data-baseweb="select"] > div {
+  background: var(--paper-raised) !important;
+  border: 1px solid var(--rule-strong) !important;
+  border-radius: var(--radius) !important;
 }
 
-section[data-testid="stSidebar"] .block-container {
-  padding-top: 1.6rem;
+/* buttons — ink, not Streamlit red */
+.stButton > button {
+  background: var(--ink) !important;
+  color: var(--paper) !important;
+  border: 0 !important;
+  border-radius: var(--radius) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 10px 20px !important;
+  transition: opacity 0.18s var(--ease), transform 0.18s var(--ease);
+}
+.stButton > button:hover { opacity: 0.86; transform: translateY(-1px); }
+.stDownloadButton > button {
+  background: transparent !important; color: var(--ink-soft) !important;
+  border: 1px solid var(--rule-strong) !important; border-radius: var(--radius) !important;
+  font-family: var(--font-mono) !important; font-size: 10.5px !important;
+  letter-spacing: 0.12em; text-transform: uppercase;
 }
 
-div[data-testid="stMetricValue"] {
-  font-size: 1.05rem;
+/* tabs read as two halves of one lab */
+.stTabs [data-baseweb="tab-list"] { gap: 26px; border-bottom: 1px solid var(--rule); }
+.stTabs [data-baseweb="tab"] {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint);
+  padding: 10px 0;
+}
+.stTabs [aria-selected="true"] { color: var(--ink) !important; }
+.stTabs [data-baseweb="tab-highlight"] { background: var(--ink) !important; }
+
+/* expanders as criterion cards */
+.streamlit-expanderHeader, details summary {
+  font-family: var(--font-sans) !important;
+  font-weight: 600 !important;
+  background: var(--paper-raised) !important;
+  border-radius: var(--radius) !important;
+}
+div[data-testid="stExpander"] {
+  border: 1px solid var(--rule) !important;
+  border-radius: var(--radius) !important;
+  background: var(--paper-raised) !important;
+  margin-bottom: 6px;
 }
 
-/* Tabs read as two halves of one lab rather than separate pages */
-button[data-baseweb="tab"] {
-  font-weight: 600;
+/* alerts, toned to the palette */
+div[data-testid="stAlert"] { border-radius: var(--radius); }
+
+/* agent log */
+.agent-log {
+  font-family: var(--font-mono); font-size: 11.5px; line-height: 1.7;
+  background: var(--paper-sunk); border: 1px solid var(--rule);
+  border-radius: var(--radius); padding: 14px 16px;
+  max-height: 340px; overflow-y: auto; white-space: pre-wrap;
+}
+.agent-tool { color: var(--conditions); font-weight: 600; }
+
+hr { border: 0; border-top: 1px solid var(--rule); margin: 26px 0; }
+
+@media (max-width: 760px) {
+  .decision { flex-direction: column; gap: 20px; }
+  .score-block { text-align: left; padding-left: 0; border-left: 0;
+    padding-top: 18px; border-top: 1px solid var(--rule); }
+  .score-working { white-space: normal; }
+  .masthead { flex-direction: column; align-items: flex-start; }
+}
+
+/* ==========================================================================
+   Colour modifiers
+
+   Streamlit's markdown sanitiser strips most properties out of inline style
+   attributes — `width` survives, `background` and `color` do not — so every
+   colour that varies per row is applied by class instead of inline.
+   ========================================================================== */
+
+.spine-approve    { background: var(--approve); }
+.spine-conditions { background: var(--conditions); }
+.spine-refer      { background: var(--refer); }
+.spine-decline    { background: var(--decline); }
+.spine-neutral    { background: var(--ink); }
+
+.word-approve    { color: var(--approve); }
+.word-conditions { color: var(--conditions); }
+.word-refer      { color: var(--refer); }
+.word-decline    { color: var(--decline); }
+.word-neutral    { color: var(--ink); }
+
+.chip-1  { background: var(--score-1); }
+.chip-2  { background: var(--score-2); }
+.chip-3  { background: var(--score-3); }
+.chip-4  { background: var(--score-4); }
+.chip-5  { background: var(--score-5); }
+.chip-ne { background: var(--score-ne); }
+
+.bar-1  { background: var(--score-1); }
+.bar-2  { background: var(--score-2); }
+.bar-3  { background: var(--score-3); }
+.bar-4  { background: var(--score-4); }
+.bar-5  { background: var(--score-5); }
+.bar-ne { background: var(--score-ne); }
+
+.callout-decline {
+  border-left-color: var(--decline);
+  background: rgba(155, 44, 44, 0.07);
+}
+.callout-refer {
+  border-left-color: var(--refer);
+  background: rgba(143, 92, 11, 0.08);
 }
