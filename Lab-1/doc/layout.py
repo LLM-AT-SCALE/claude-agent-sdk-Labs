@@ -75,6 +75,28 @@ def register_fonts() -> None:
     pdfmetrics.registerFont(TTFont("Mono-Bold", r"C:\Windows\Fonts\consolab.ttf"))
 
 
+ASSET_EXTS = (".png", ".jpg", ".jpeg", ".PNG", ".JPG", ".JPEG")
+
+
+def find_asset(folder: Path, stem: str) -> Path | None:
+    """Resolve an asset by name, whatever image extension it was saved with.
+
+    Screenshots get recaptured and re-saved constantly, and the format changes
+    with the tool that took them. Matching on the stem means a .png dropped in
+    where a .jpeg used to be still gets picked up, rather than being silently
+    skipped and leaving a hole in the page.
+    """
+    direct = folder / stem
+    if direct.suffix and direct.exists():
+        return direct
+    base = direct.stem
+    for ext in ASSET_EXTS:
+        candidate = folder / f"{base}{ext}"
+        if candidate.exists():
+            return candidate
+    return None
+
+
 def wrap(text: str, font: str, size: float, width: float) -> list[str]:
     """Greedy wrap that measures with the real font metrics."""
     words = text.split()
@@ -115,12 +137,12 @@ class Doc:
         c.setLineWidth(1.2)
         c.line(20, TOP_RULE_Y, PAGE_W - 20, TOP_RULE_Y)
 
-        mascot = self.assets / "mascot.jpg"
-        if mascot.exists():
+        mascot = find_asset(self.assets, "mascot.jpg")
+        if mascot:
             x, y, w, h = MASCOT_RECT
             c.drawImage(ImageReader(str(mascot)), x, y, w, h, mask="auto")
-        shadow = self.assets / "stripe.png"
-        if shadow.exists():
+        shadow = find_asset(self.assets, "stripe.png")
+        if shadow:
             x, y, w, h = MASCOT_SHADOW
             c.drawImage(ImageReader(str(shadow)), x, y, w, h, mask="auto")
 
@@ -389,7 +411,10 @@ class Doc:
                 max_w: float | None = None) -> None:
         """Place a screenshot inside the grey mount the source document uses."""
         if not path.exists():
-            return
+            resolved = find_asset(path.parent, path.name)
+            if resolved is None:
+                return
+            path = resolved
         reader = ImageReader(str(path))
         iw, ih = reader.getSize()
         target_w = min(max_w or CONTENT_W, CONTENT_W)

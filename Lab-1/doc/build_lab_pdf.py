@@ -25,6 +25,7 @@ sys.path.insert(0, str(HERE))
 from codeshot import render_code  # noqa: E402
 from layout import (  # noqa: E402
     CONTENT_W,
+    find_asset,
     INK,
     INK_SOFT,
     MARGIN_L,
@@ -46,8 +47,8 @@ def cover(doc: Doc) -> None:
     doc.new_page(chrome=False)
     c = doc.c
 
-    background = ASSETS / "cover_bg.png"
-    if background.exists():
+    background = find_asset(ASSETS, "cover_bg.png")
+    if background:
         c.drawImage(ImageReader(str(background)), 0, 0, PAGE_W, PAGE_H, mask="auto")
 
     # Paint over the two text panels of the source cover and set our own.
@@ -178,6 +179,10 @@ def source_organization(doc: Doc) -> None:
          "Use both parts through a browser interface.",
          "Deploy the Streamlit application and open it over ngrok.",
          "Run the final cell and open the printed URL."),
+        ("STEP 7: USE THE APPLICATION",
+         "Score a real application end to end.",
+         "See the decision, the score and the hard rule in the interface.",
+         "Open the ngrok URL, enter your key, choose an application and read the result."),
     ]
 
     for title, purpose, objective, action in steps:
@@ -274,12 +279,32 @@ print("Key stored for this session only.")''',
         "“Please wait…” with no explanation."
     )
 
+    doc.new_page()
+    doc.grey_head("Step 7: Using the Application", size=24)
+    doc.body(
+        "Open the ngrok URL. Enter your Anthropic API key in the password field, choose "
+        "a sample application or upload your own, then work through the two tabs."
+    )
+    doc.picture(ASSETS / "app_result.png")
+    doc.space(4)
+    doc.numbered([
+        "Part A scores the application in one Messages API call and shows the decision, "
+        "the weighted score, and the arithmetic that produced it.",
+        "The decision panel names the outcome. Here the application scored 52, but the "
+        "decision is DECLINE rather than the band that 52 would fall into.",
+        "That is hard rule HR-1: Capacity scored 1, because DSCR is below 1.00x. A loan "
+        "that cannot cover its own debt service is not rescued by good collateral, so "
+        "the rule overrides the weighted total.",
+        "Part B hands the same application to the Claude Agent SDK, which reads the "
+        "rubric and the narrative itself and writes a credit memo you can download.",
+    ])
+
 
 # --------------------------------------------------------- code teardown
 
 CODE_SECTIONS = [
     (
-        "Step 7: Understanding requirements.txt",
+        "Step 8: Understanding requirements.txt",
         "This file lists every library the lab needs.",
         "requirements.txt",
         """anthropic==1.0.0
@@ -296,7 +321,7 @@ pypdf==5.1.0""",
         ],
     ),
     (
-        "Step 8: Understanding src/validate.py",
+        "Step 9: Understanding src/validate.py",
         "This file checks the API key before the lab spends anything.",
         "src/validate.py",
         """import anthropic
@@ -334,7 +359,7 @@ def validate_anthropic_key(api_key: str) -> str:
         ],
     ),
     (
-        "Step 9: Understanding src/ingestion.py",
+        "Step 10: Understanding src/ingestion.py",
         "This file reads the application out of whatever file was uploaded.",
         "src/ingestion.py",
         """SUPPORTED_EXTENSIONS = (".pdf", ".docx", ".txt")
@@ -372,7 +397,7 @@ def extract_text(filename: str, data: bytes) -> str:
         ],
     ),
     (
-        "Step 10: Understanding src/model.py — Part A",
+        "Step 11: Understanding src/model.py — Part A",
         "This file makes the single Messages API call that scores the application.",
         "src/model.py",
         """MODEL = "claude-opus-5"
@@ -410,7 +435,7 @@ def score_application(narrative: str, rubric: dict, api_key: str) -> dict:
         ],
     ),
     (
-        "Step 11: Understanding src/agent.py — Part B",
+        "Step 12: Understanding src/agent.py — Part B",
         "This file gives the same application to an agent instead.",
         "src/agent.py",
         """def build_options(workspace: Path) -> ClaudeAgentOptions:
@@ -451,7 +476,7 @@ async def run_agent(narrative_path: Path, workspace: Path):
         ],
     ),
     (
-        "Step 12: Understanding src/scoring.py",
+        "Step 13: Understanding src/scoring.py",
         "This file does the arithmetic once Claude has chosen the scores.",
         "src/scoring.py",
         """def round_half_up(value: float) -> int:
@@ -506,7 +531,7 @@ def code_teardown(doc: Doc) -> None:
 
 def how_it_works(doc: Doc) -> None:
     doc.new_page()
-    doc.grey_head("Step 13: How Everything Works Together", size=24)
+    doc.grey_head("Step 14: How Everything Works Together", size=24)
 
     doc.body("Part A — the Messages API", font="Segoe-Bold", size=18)
     doc.numbered([

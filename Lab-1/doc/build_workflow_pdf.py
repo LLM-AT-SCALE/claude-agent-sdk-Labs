@@ -19,7 +19,9 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 from codeshot import render_code  # noqa: E402
-from layout import CONTENT_W, INK_SOFT, PAGE_H, PAGE_W, WHITE, Doc  # noqa: E402
+from layout import (  # noqa: E402
+    CONTENT_W, INK_SOFT, PAGE_H, PAGE_W, WHITE, Doc, find_asset,
+)
 
 ASSETS = HERE / "assets"
 CODE_DIR = HERE / "code"
@@ -30,8 +32,8 @@ def cover(doc: Doc) -> None:
     doc.new_page(chrome=False)
     c = doc.c
 
-    background = ASSETS / "cover_bg.png"
-    if background.exists():
+    background = find_asset(ASSETS, "cover_bg.png")
+    if background:
         c.drawImage(ImageReader(str(background)), 0, 0, PAGE_W, PAGE_H, mask="auto")
 
     c.setFillColor(HexColor("#2E63B4"))
