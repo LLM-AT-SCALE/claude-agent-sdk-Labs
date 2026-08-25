@@ -1,0 +1,53 @@
+/* Lab 1 — Loan Application Evaluation
+   Kept deliberately light so the lab reads the same on any Streamlit theme.
+   Drop your organisation's stylesheet in here to rebrand. */
+
+.block-container {
+  padding-top: 2.2rem;
+  padding-bottom: 3rem;
+  max-width: 1180px;
+}
+
+h2 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Section headings inside the lab body */
+h4 {
+  margin-top: 0.4rem;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  color: #3e4c59;
+}
+
+/* The API key field — visually distinct, since it is the one secret input */
+input[type="password"] {
+  font-family: ui-monospace, "IBM Plex Mono", "SF Mono", monospace;
+  letter-spacing: 0.08em;
+}
+
+/* Quoted evidence pulled from the narrative */
+blockquote {
+  border-left: 3px solid #c8ced4;
+  padding-left: 14px;
+  color: #4a463c;
+  font-style: italic;
+}
+
+section[data-testid="stSidebar"] {
+  border-right: 1px solid #e4dfd8;
+}
+
+section[data-testid="stSidebar"] .block-container {
+  padding-top: 1.6rem;
+}
+
+div[data-testid="stMetricValue"] {
+  font-size: 1.05rem;
+}
+
+/* Tabs read as two halves of one lab rather than separate pages */
+button[data-baseweb="tab"] {
+  font-weight: 600;
+}

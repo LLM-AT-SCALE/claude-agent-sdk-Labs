@@ -1,0 +1,22 @@
+# Never commit credentials. The labs prompt for the API key at runtime.
+.env
+.env.*
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Streamlit / runtime artifacts
+.streamlit/secrets.toml
+files/
+outputs/
+*.docx
+!Lab-1/data/*.docx
+
+# OS
+Thumbs.db
+.DS_Store
