@@ -432,3 +432,85 @@ class Doc:
     def save(self) -> None:
         self.c.showPage()
         self.c.save()
+
+
+    def prompt_box(self, label: str, text: str, who: str = "Human") -> None:
+        """A verbatim prompt, quoted. Used to show what was actually typed."""
+        lines = wrap(text, "Segoe", 15.5, CONTENT_W - 74)
+        h = len(lines) * 26 + 66
+        self.need(h + 20)
+        c = self.c
+        y = self.y - h
+
+        c.setFillColor(HexColor("#F7F9F8"))
+        c.rect(MARGIN_L, y, CONTENT_W, h, stroke=0, fill=1)
+        c.setFillColor(GREEN_DEEP)
+        c.rect(MARGIN_L, y, 6, h, stroke=0, fill=1)
+
+        c.setFillColor(HexColor("#7A7A7A"))
+        c.setFont("Segoe-Bold", 11)
+        c.drawString(MARGIN_L + 30, y + h - 26, label.upper())
+
+        tag_w = pdfmetrics.stringWidth(who, "Segoe-Bold", 11) + 22
+        c.setFillColor(GREEN_TINT)
+        c.roundRect(MARGIN_L + CONTENT_W - tag_w - 24, y + h - 32, tag_w, 22, 4,
+                    stroke=0, fill=1)
+        c.setFillColor(HexColor("#1F6B4E"))
+        c.setFont("Segoe-Bold", 11)
+        c.drawCentredString(MARGIN_L + CONTENT_W - tag_w / 2 - 24, y + h - 26, who)
+
+        c.setFillColor(INK)
+        c.setFont("Segoe", 15.5)
+        ty = y + h - 54
+        for line in lines:
+            c.drawString(MARGIN_L + 30, ty, line)
+            ty -= 26
+        self.y = y - 24
+
+    def table(self, headers: list[str], rows: list[list[str]],
+              widths: list[float], size: float = 13.5) -> None:
+        """A plain ruled table, as used for results and defect lists."""
+        total = sum(widths)
+        scale = CONTENT_W / total
+        widths = [w * scale for w in widths]
+
+        wrapped_rows = []
+        for row in rows:
+            cells = [wrap(str(cell), "Segoe", size, widths[i] - 20)
+                     for i, cell in enumerate(row)]
+            wrapped_rows.append((cells, max(len(cl) for cl in cells)))
+
+        head_h = 34.0
+        needed = head_h + sum(n * 21 + 16 for _, n in wrapped_rows)
+        self.need(needed + 20)
+
+        c = self.c
+        y = self.y
+
+        c.setFillColor(HexColor("#EFEFEF"))
+        c.rect(MARGIN_L, y - head_h, CONTENT_W, head_h, stroke=0, fill=1)
+        c.setFillColor(HexColor("#4A4A4A"))
+        c.setFont("Segoe-Bold", 12)
+        x = MARGIN_L
+        for i, header in enumerate(headers):
+            c.drawString(x + 10, y - head_h + 12, header)
+            x += widths[i]
+        y -= head_h
+
+        for cells, n in wrapped_rows:
+            row_h = n * 21 + 16
+            c.setStrokeColor(HexColor("#DCDCDC"))
+            c.setLineWidth(0.8)
+            c.line(MARGIN_L, y - row_h, MARGIN_L + CONTENT_W, y - row_h)
+            x = MARGIN_L
+            for i, cell_lines in enumerate(cells):
+                c.setFillColor(INK)
+                c.setFont("Segoe", size)
+                ty = y - 20
+                for line in cell_lines:
+                    c.drawString(x + 10, ty, line)
+                    ty -= 21
+                x += widths[i]
+            y -= row_h
+
+        self.y = y - 22

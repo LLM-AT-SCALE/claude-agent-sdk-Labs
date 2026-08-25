@@ -27,5 +27,5 @@ Thumbs.db
 # public, so neither the assets nor the built PDF are committed.
 Lab-1/doc/assets/
 Lab-1/doc/code/
-Lab-1/doc/preview/
+Lab-1/doc/preview*/
 Lab-1/doc/*.pdf
