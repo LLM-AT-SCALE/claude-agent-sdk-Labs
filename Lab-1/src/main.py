@@ -14,6 +14,7 @@ from pathlib import Path
 import streamlit as st
 
 from src.agent import clear_api_key, run_agent, set_api_key
+from src.ingestion import SUPPORTED_EXTENSIONS, UnreadableDocument, extract_text
 from src.model import score_application
 from src.scoring import aggregate, load_rubric
 from src.validate import validate_anthropic_key
@@ -84,23 +85,47 @@ def api_key_gate() -> str | None:
     return vAR_api_key
 
 
+def sample_files() -> list[str]:
+    """Every sample shipped with the lab, in a stable order."""
+    names = [
+        p.name
+        for p in DATA_DIR.iterdir()
+        if p.is_file() and p.suffix.lower() in SUPPORTED_EXTENSIONS
+    ]
+    return sorted(names)
+
+
 def choose_narrative() -> tuple[str, str] | None:
-    """Let the user upload a narrative or pick one of the samples."""
-    samples = sorted(p.name for p in DATA_DIR.glob("*.txt"))
+    """Let the user upload an application or pick one of the samples.
 
+    A real application arrives as a PDF or a Word document, so both are read
+    here; .txt is accepted too because it makes the samples easy to inspect.
+    """
     col1, col2 = st.columns(2)
+
     with col1:
-        uploaded = st.file_uploader("Upload a loan application narrative", type=["txt"])
+        uploaded = st.file_uploader(
+            "Upload a loan application (PDF or DOCX)",
+            type=[ext.lstrip(".") for ext in SUPPORTED_EXTENSIONS],
+        )
     with col2:
-        chosen = st.selectbox("...or use a sample application", ["—"] + samples)
+        chosen = st.selectbox("...or use a sample application", ["—"] + sample_files())
 
+    source: tuple[str, bytes] | None = None
     if uploaded is not None:
-        return uploaded.name, uploaded.read().decode("utf-8", errors="replace")
+        source = (uploaded.name, uploaded.read())
+    elif chosen and chosen != "—":
+        source = (chosen, (DATA_DIR / chosen).read_bytes())
 
-    if chosen and chosen != "—":
-        return chosen, (DATA_DIR / chosen).read_text(encoding="utf-8")
+    if source is None:
+        return None
 
-    return None
+    filename, data = source
+    try:
+        return filename, extract_text(filename, data)
+    except UnreadableDocument as exc:
+        st.error(str(exc))
+        return None
 
 
 def render_result(result: dict, rubric: dict) -> None:
@@ -200,7 +225,10 @@ def part_b(filename: str, narrative: str, api_key: str) -> None:
     (workspace / "rubric.json").write_text(
         (LAB_DIR / "rubric.json").read_text(encoding="utf-8"), encoding="utf-8"
     )
-    narrative_path = workspace / filename
+
+    # The agent reads text, so hand it the extracted narrative rather than the
+    # original binary — a .pdf holding plain text would only confuse it.
+    narrative_path = workspace / f"{Path(filename).stem}.txt"
     narrative_path.write_text(narrative, encoding="utf-8")
 
     if st.button("Run the agent", type="primary", key="agent_btn"):

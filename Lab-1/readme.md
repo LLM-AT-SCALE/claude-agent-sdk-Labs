@@ -27,8 +27,9 @@ Lab-1/
 ├── app.py               Streamlit entry point
 ├── rubric.json          The Five C's: weights, levels, bands, hard rule
 ├── requirements.txt
-├── data/                Four sample narratives, one per decision band
+├── data/                Four applications, each as .pdf, .docx and .txt
 ├── src/
+│   ├── ingestion.py     Reads the upload — PDF, DOCX or TXT
 │   ├── validate.py      Checks the API key before the lab spends tokens
 │   ├── model.py         Part A — the Messages API call
 │   ├── agent.py         Part B — the Claude Agent SDK
@@ -36,6 +37,19 @@ Lab-1/
 │   └── main.py          Streamlit UI and orchestration
 └── style/final.css
 ```
+
+## Input formats
+
+A loan application arrives as a **PDF or a Word document**, so the lab opens
+both — `pypdf` for PDF, `python-docx` for DOCX, including table cells, because
+narratives routinely put the financials in a table. `.txt` is accepted too, so
+the samples are easy to read.
+
+The same application in `.pdf` and `.docx` scores identically; the format is
+only packaging.
+
+**There is no OCR.** A scanned or photographed PDF has no text layer, and the
+lab rejects it with a clear message rather than guessing at pixels.
 
 ## The rubric
 
