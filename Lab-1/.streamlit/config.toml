@@ -1,5 +1,10 @@
-# Base theme. The detailed design system lives in style/final.css; these values
-# colour the widgets Streamlit renders itself, so the two agree.
+# Base theme only.
+#
+# Deliberately no [server] block. Setting enableCORS/enableXsrfProtection here
+# broke the websocket behind the ngrok tunnel — the handshake succeeded (101)
+# and the session then died, leaving the browser stuck on "Please wait..."
+# retrying forever. The bootcamp labs that work set none of this, so neither
+# does this one. Anything the run command genuinely needs is passed as a flag.
 
 [theme]
 base = "light"
@@ -7,12 +12,6 @@ primaryColor = "#17150F"
 backgroundColor = "#F5F2EA"
 secondaryBackgroundColor = "#FBF9F4"
 textColor = "#17150F"
-font = "sans serif"
-
-[server]
-headless = true
-enableXsrfProtection = false
-enableCORS = false
 
 [browser]
 gatherUsageStats = false
