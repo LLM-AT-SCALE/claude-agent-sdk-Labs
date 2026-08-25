@@ -28,6 +28,7 @@ Thumbs.db
 Lab-1/doc/assets/
 Lab-1/doc/code/
 Lab-1/doc/preview*/
+Lab-1/docs/preview*/
 # Built guides embed artwork from the source bootcamp PDF - keep them all out,
 # wherever they land. The sample loan applications in Lab-1/data are ours.
 *.pdf

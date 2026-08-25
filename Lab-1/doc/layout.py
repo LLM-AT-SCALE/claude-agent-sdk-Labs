@@ -60,17 +60,74 @@ FOOTER_PURPLE = HexColor("#826DC4")
 CARD_BORDER = HexColor("#D8D8D8")
 CALLOUT_BG = HexColor("#F4F8F6")
 
-FOOTER_TEXT = (
+PAPER = HexColor("#FFFFFF")          # page ground
+FOOTER_BARS = (FOOTER_BLUE, FOOTER_GREEN, FOOTER_PURPLE)
+USE_MASCOT = True                    # False draws a plain numeral badge instead
+THEME = "bootcamp"                   # active theme name, set by apply_theme()
+
+BOOTCAMP_FOOTER = (
     "\u00a9 LLM at Scale.AI | Confidential and Proprietary | Not for Distribution | "
     "A step-by-step guide to designing, developing, and deploying an application. | "
     "admin@llmatscale.ai"
 )
+FOOTER_TEXT = BOOTCAMP_FOOTER
 
-# -------------------------------------------------------------------- fonts --
+ORIGINAL_FOOTER = (
+    "Chetan Kumar M K  |  Loan Application Evaluation  |  "
+    "github.com/chetankumarmk56/Claude-Agentic-SDK-Labs"
+)
+
+
+def apply_theme(name: str) -> None:
+    """Switch the page chrome between the two brandings.
+
+    Module-level state rather than an attribute on Doc: every constant below
+    is read by a dozen drawing methods, and one build produces one document,
+    so setting it once at the top of a run is simpler than threading a theme
+    object through every call.
+    """
+    global PAPER, INK, INK_SOFT, RULE, GREEN, GREEN_DEEP, GREEN_TINT
+    global GREY_HEAD, CALLOUT_BG, FOOTER_TEXT, FOOTER_BARS, USE_MASCOT, THEME
+
+    THEME = name
+
+    if name == "original":
+        # The application's own palette - warm paper, ink, and the decision
+        # colours it uses for APPROVE / CONDITIONS / DECLINE.
+        PAPER = HexColor("#F5F2EA")
+        INK = HexColor("#17150F")
+        INK_SOFT = HexColor("#4A463C")
+        RULE = HexColor("#DDD7C8")
+        GREEN = HexColor("#2C6480")       # banner fill - the "conditions" blue
+        GREEN_DEEP = HexColor("#2E6F45")  # accents - the "approve" green
+        GREEN_TINT = HexColor("#E4DED0")  # card headers
+        GREY_HEAD = HexColor("#E7E1D4")
+        CALLOUT_BG = HexColor("#EFEBE0")
+        FOOTER_TEXT = ORIGINAL_FOOTER
+        FOOTER_BARS = (HexColor("#2E6F45"), HexColor("#2C6480"), HexColor("#9B2C2C"))
+        USE_MASCOT = False
+    else:
+        PAPER = HexColor("#FFFFFF")
+        INK = HexColor("#333333")
+        INK_SOFT = HexColor("#5A5A5A")
+        RULE = HexColor("#E5E5E5")
+        GREEN = HexColor("#29B28C")
+        GREEN_DEEP = HexColor("#1DAE85")
+        GREEN_TINT = HexColor("#C7E5D5")
+        GREY_HEAD = HexColor("#E5E5E5")
+        CALLOUT_BG = HexColor("#F4F8F6")
+        FOOTER_TEXT = BOOTCAMP_FOOTER
+        FOOTER_BARS = (FOOTER_BLUE, FOOTER_GREEN, FOOTER_PURPLE)
+        USE_MASCOT = True
+
+
+# ------------------------------------------------------------------- fonts --
 
 def register_fonts() -> None:
     pdfmetrics.registerFont(TTFont("Segoe", r"C:\Windows\Fonts\segoeui.ttf"))
     pdfmetrics.registerFont(TTFont("Segoe-Bold", r"C:\Windows\Fonts\segoeuib.ttf"))
+    pdfmetrics.registerFont(TTFont("Cambria", r"C:\Windows\Fonts\cambria.ttc"))
+    pdfmetrics.registerFont(TTFont("Cambria-Bold", r"C:\Windows\Fonts\cambriab.ttf"))
     pdfmetrics.registerFont(TTFont("Mono", r"C:\Windows\Fonts\consola.ttf"))
     pdfmetrics.registerFont(TTFont("Mono-Bold", r"C:\Windows\Fonts\consolab.ttf"))
 
@@ -133,31 +190,44 @@ class Doc:
     def _draw_chrome(self) -> None:
         c = self.c
 
+        if PAPER != WHITE:
+            c.setFillColor(PAPER)
+            c.rect(0, 0, PAGE_W, PAGE_H, stroke=0, fill=1)
+
         c.setStrokeColor(RULE)
         c.setLineWidth(1.2)
         c.line(20, TOP_RULE_Y, PAGE_W - 20, TOP_RULE_Y)
 
-        mascot = find_asset(self.assets, "mascot.jpg")
-        if mascot:
-            x, y, w, h = MASCOT_RECT
-            c.drawImage(ImageReader(str(mascot)), x, y, w, h, mask="auto")
-        shadow = find_asset(self.assets, "stripe.png")
-        if shadow:
-            x, y, w, h = MASCOT_SHADOW
-            c.drawImage(ImageReader(str(shadow)), x, y, w, h, mask="auto")
+        if USE_MASCOT:
+            mascot = find_asset(self.assets, "mascot.jpg")
+            if mascot:
+                x, y, w, h = MASCOT_RECT
+                c.drawImage(ImageReader(str(mascot)), x, y, w, h, mask="auto")
+            shadow = find_asset(self.assets, "stripe.png")
+            if shadow:
+                x, y, w, h = MASCOT_SHADOW
+                c.drawImage(ImageReader(str(shadow)), x, y, w, h, mask="auto")
 
-        x0, x1, y_top, y_tip = MASCOT_CHEVRON
-        chevron = c.beginPath()
-        chevron.moveTo(x0, y_top)
-        chevron.lineTo(x1, y_top)
-        chevron.lineTo((x0 + x1) / 2, y_tip)
-        chevron.close()
-        c.setFillColor(CHEVRON_GREEN)
-        c.drawPath(chevron, stroke=0, fill=1)
+            x0, x1, y_top, y_tip = MASCOT_CHEVRON
+            chevron = c.beginPath()
+            chevron.moveTo(x0, y_top)
+            chevron.lineTo(x1, y_top)
+            chevron.lineTo((x0 + x1) / 2, y_tip)
+            chevron.close()
+            c.setFillColor(CHEVRON_GREEN)
+            c.drawPath(chevron, stroke=0, fill=1)
 
-        c.setFillColor(INK)
-        c.setFont("Segoe-Bold", 13)
-        c.drawCentredString(PAGE_NUM_XY[0], PAGE_NUM_XY[1], str(self.page))
+            c.setFillColor(INK)
+            c.setFont("Segoe-Bold", 13)
+            c.drawCentredString(PAGE_NUM_XY[0], PAGE_NUM_XY[1], str(self.page))
+        else:
+            # Own mark: a numeral over a short rule, no borrowed artwork.
+            c.setFillColor(INK)
+            c.setFont("Cambria-Bold", 30)
+            c.drawRightString(PAGE_W - MARGIN_R, PAGE_H - 108, str(self.page))
+            c.setStrokeColor(GREEN_DEEP)
+            c.setLineWidth(2.4)
+            c.line(PAGE_W - MARGIN_R - 42, PAGE_H - 122, PAGE_W - MARGIN_R, PAGE_H - 122)
 
         # dotted rule above the footer text
         c.setStrokeColor(HexColor("#CFCFCF"))
@@ -171,7 +241,7 @@ class Doc:
         c.drawString(MARGIN_L, FOOTER_TEXT_Y, FOOTER_TEXT)
 
         third = PAGE_W / 3.0
-        for index, colour in enumerate((FOOTER_BLUE, FOOTER_GREEN, FOOTER_PURPLE)):
+        for index, colour in enumerate(FOOTER_BARS):
             c.setFillColor(colour)
             c.rect(index * third, 0, third + 1, FOOTER_BAR_H, stroke=0, fill=1)
 

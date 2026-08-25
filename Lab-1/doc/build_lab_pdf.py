@@ -23,6 +23,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 from codeshot import render_code  # noqa: E402
+import layout  # noqa: E402
 from layout import (  # noqa: E402
     CONTENT_W,
     find_asset,
@@ -34,6 +35,65 @@ from layout import (  # noqa: E402
     WHITE,
     Doc,
 )
+
+def original_cover(doc, lab_line: str, title_lines: list, subtitle: str) -> None:
+    """A cover drawn from scratch - no borrowed photography, logos or marks.
+
+    Uses the application's own palette so the document and the software it
+    documents read as one thing.
+    """
+    from layout import PAGE_H, PAGE_W, MARGIN_L, MARGIN_R
+    doc.new_page(chrome=False)
+    c = doc.c
+
+    paper = HexColor("#F5F2EA")
+    ink = HexColor("#17150F")
+    c.setFillColor(paper)
+    c.rect(0, 0, PAGE_W, PAGE_H, stroke=0, fill=1)
+
+    # A broad ink field for the title to sit on, with the decision colours
+    # from the application running down its left edge.
+    field_top, field_h = PAGE_H - 300, 470
+    c.setFillColor(ink)
+    c.rect(0, field_top - field_h, PAGE_W, field_h, stroke=0, fill=1)
+    for i, colour in enumerate(("#2E6F45", "#2C6480", "#8F5C0B", "#9B2C2C")):
+        c.setFillColor(HexColor(colour))
+        c.rect(0, field_top - field_h + i * (field_h / 4), 12, field_h / 4,
+               stroke=0, fill=1)
+
+    c.setFillColor(HexColor("#B9B2A2"))
+    c.setFont("Segoe-Bold", 15)
+    c.drawString(MARGIN_L, field_top - 74, lab_line.upper())
+
+    c.setFillColor(HexColor("#F5F2EA"))
+    c.setFont("Cambria-Bold", 74)
+    for i, line in enumerate(title_lines):
+        c.drawString(MARGIN_L, field_top - 168 - i * 84, line)
+
+    c.setFillColor(HexColor("#C9C2B2"))
+    c.setFont("Segoe", 26)
+    c.drawString(MARGIN_L, field_top - 372, subtitle)
+
+    # Author block
+    c.setFillColor(ink)
+    c.setFont("Cambria-Bold", 30)
+    c.drawString(MARGIN_L, 300, "Chetan Kumar M K")
+    c.setFillColor(HexColor("#4A463C"))
+    c.setFont("Segoe", 18)
+    c.drawString(MARGIN_L, 262, "github.com/chetankumarmk56/Claude-Agentic-SDK-Labs")
+
+    c.setStrokeColor(HexColor("#C2BAA5"))
+    c.setLineWidth(1.2)
+    c.line(MARGIN_L, 226, PAGE_W - MARGIN_R, 226)
+
+    c.setFillColor(HexColor("#4A463C"))
+    c.setFont("Segoe", 17)
+    c.drawString(MARGIN_L, 186, "Claude Agent SDK  ·  Messages API  ·  Python  ·  Streamlit")
+
+    for i, colour in enumerate(("#2E6F45", "#2C6480", "#9B2C2C")):
+        c.setFillColor(HexColor(colour))
+        c.rect(i * (PAGE_W / 3), 0, PAGE_W / 3 + 1, 22, stroke=0, fill=1)
+
 
 ASSETS = HERE / "assets"
 CODE_DIR = HERE / "code"
@@ -129,7 +189,9 @@ def front_matter(doc: Doc) -> None:
 
 def source_organization(doc: Doc) -> None:
     doc.new_page()
-    doc.running_head("GEN AI BOOTCAMP FOR ENTERPRISE ENABLEMENT")
+    doc.running_head("LOAN APPLICATION EVALUATION"
+                     if layout.THEME == "original"
+                     else "GEN AI BOOTCAMP FOR ENTERPRISE ENABLEMENT")
 
     doc.grey_head("Source Code Organization", size=26)
     doc.card_row([
@@ -226,7 +288,8 @@ def deployment(doc: Doc) -> None:
         "in the image below, select “Restart session” to proceed, then run the "
         "cell again."
     )
-    doc.picture(ASSETS / "colab_restart.jpeg")
+    if layout.THEME != "original":
+        doc.picture(ASSETS / "colab_restart.jpeg")
 
     doc.new_page()
     doc.body(
@@ -270,7 +333,8 @@ print("Key stored for this session only.")''',
         "If you have not used ngrok before, sign up for a free account and copy your "
         "authtoken from the dashboard."
     )
-    doc.picture(ASSETS / "ngrok_login.jpeg", max_w=520)
+    if layout.THEME != "original":
+        doc.picture(ASSETS / "ngrok_login.jpeg", max_w=520)
     doc.space(6)
     doc.callout(
         "The cell stops any server left over from an earlier run before it starts a new "
@@ -608,14 +672,29 @@ def _attach_code_block(doc_cls) -> None:
     doc_cls.code_block = code_block
 
 
+def _parse_args():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--theme", choices=["bootcamp", "original"], default="bootcamp")
+    ap.add_argument("--out", default=None)
+    return ap.parse_args()
+
+
 def main() -> int:
+    args = _parse_args()
+    layout.apply_theme(args.theme)
     _attach_code_block(Doc)
     CODE_DIR.mkdir(parents=True, exist_ok=True)
 
-    out = HERE / "Lab-1_Loan_Application_Evaluation.pdf"
+    out = Path(args.out) if args.out else HERE / "Lab-1_Loan_Application_Evaluation.pdf"
+    out.parent.mkdir(parents=True, exist_ok=True)
     doc = Doc(out, ASSETS)
 
-    cover(doc)
+    if args.theme == "original":
+        original_cover(doc, "Lab One", ["Loan Application", "Evaluation"],
+                       "Scoring credit applications with the Claude Agent SDK")
+    else:
+        cover(doc)
     front_matter(doc)
     source_organization(doc)
     deployment(doc)
