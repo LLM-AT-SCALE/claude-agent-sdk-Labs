@@ -20,3 +20,12 @@ outputs/
 # OS
 Thumbs.db
 .DS_Store
+
+# Lab guide build artefacts.
+# doc/assets holds artwork lifted from the existing bootcamp PDF, which is
+# marked Confidential and Proprietary - Not for Distribution. This repo is
+# public, so neither the assets nor the built PDF are committed.
+Lab-1/doc/assets/
+Lab-1/doc/code/
+Lab-1/doc/preview/
+Lab-1/doc/*.pdf
