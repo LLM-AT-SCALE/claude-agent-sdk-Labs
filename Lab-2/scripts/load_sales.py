@@ -13,6 +13,11 @@ import json
 import sys
 from pathlib import Path
 
+# Running this file by path puts scripts/ on sys.path, not the project root,
+# so repository/ would not be importable. pytest.ini does the same job for
+# the test suite with pythonpath = .
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from repository import sales_repository
 from repository.db import new_session
 
