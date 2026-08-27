@@ -1,0 +1,6 @@
+customer_email,sku,quantity,unit_price,sold_at
+ava.mendez@example.com,KB-ERGO-01,2,189.00,2026-01-05T10:15:00Z
+liu.wei@example.com,MN-27U-4K,5,400.00,2026-01-06T14:30:00Z
+jonas.berg@example.com,MN-34UW-QHD,1,699.00,2026-01-15T09:00:00Z
+jonas.berg@example.com,MN-34UW-QHD,3,650.00,2026-01-15T09:00:00Z
+sara.haddad@example.com,KB-ERGO-01,1,189.00,2026-01-16T10:00:00Z

@@ -1,0 +1,1117 @@
+{
+  "$comment": "Known-good figures for validating a load. Each entry is one CSV from this folder run through scripts/load_sales.py, in load_order, against a fresh database (db/schema.sql + db/seed.sql and nothing else). sales_detail_join is the full cumulative view content immediately after that file finished loading, ordered as db/schema.sql's sales_detail view specifies: sold_at ASC, customer_email ASC, product_sku ASC. Reproduce with: python scripts/load_sales.py reference/<file>, for each file in load_order.",
+  "provenance": {
+    "verified_against": "local disposable Postgres 18 (Docker: `docker run postgres:18`), NOT the user's real Neon project",
+    "why_not_neon": "These figures were first captured against a local Postgres 18 (matching Neon's tested version) because no Neon connection string was available at the time. They have since been confirmed against real Neon - see neon_confirmation.",
+    "engine_match": "Postgres 18 matches data-dictionary.json's target.tested_version, so schema behavior (CHECK constraints, GENERATED ALWAYS AS ... STORED, IDENTITY, UNIQUE) should be identical on real Neon.",
+    "how_to_confirm_on_real_neon": "export DATABASE_URL=<neon pooled connection string>; python db/run.py; python scripts/load_sales.py reference/sample-clean.csv reference/sample-unknown-refs.csv reference/sample-bad-values.csv reference/sample-duplicates.csv reference/sample-sales.csv \u2014 then diff the output against the `runs` entries below.",
+    "status": "CONFIRMED_ON_REAL_NEON",
+    "neon_confirmation": "Confirmed 2026-08-27 against the user's real Neon project (Postgres 18.6, us-east-2 pooled endpoint, bare postgresql:// connection string), after db/drop.sql + db/schema.sql + db/seed.sql applied there. All five files reproduced their accepted/rejected counts and summed_line_total exactly; final state matched at customer=6, product=8, sales=28, revenue=11566.30; and the sales_detail join hash came out byte-identical to the local Postgres 18 figure recorded in variance-report.xlsx (sha256 c8b8f11bdd29adec1a6de00b857ac399be98352dd7352462b6bf989c7e1c3be4). The full 34-test suite also passed against Neon. The local-Postgres substitution used throughout steps 5-9 is therefore validated, not merely assumed."
+  },
+  "load_order": [
+    "sample-clean.csv",
+    "sample-unknown-refs.csv",
+    "sample-bad-values.csv",
+    "sample-duplicates.csv",
+    "sample-sales.csv"
+  ],
+  "reject_reason_coverage": {
+    "UNKNOWN_CUSTOMER": "sample-unknown-refs.csv rows 1, 3; sample-sales.csv row 18",
+    "UNKNOWN_PRODUCT": "sample-unknown-refs.csv row 2; sample-sales.csv row 17",
+    "MISSING_SOLD_AT": "sample-bad-values.csv row 1; sample-sales.csv row 19",
+    "BAD_QUANTITY": "sample-bad-values.csv rows 2 (zero), 3 (negative), 5 (non-integer); sample-sales.csv rows 20 (zero), 21 (negative)",
+    "BAD_UNIT_PRICE": "sample-bad-values.csv rows 4 (negative), 6 (3 decimal places, not representable as NUMERIC(12,2)); sample-sales.csv row 22 (negative)",
+    "DUPLICATE_SALE": "sample-duplicates.csv rows 1, 2 (conflict with rows already committed by sample-clean.csv), row 4 (conflicts with row 3 of the same file, same batch); sample-sales.csv rows 23, 24 (conflict with rows already committed by this same file, rows 1 and 2)"
+  },
+  "runs": [
+    {
+      "file": "sample-clean.csv",
+      "rows_submitted": 8,
+      "rows_accepted": 8,
+      "rejected": [],
+      "summed_line_total": "2936.34",
+      "note": "Row 8 (liu.wei / KB-ERGO-01 at 175.00) is deliberately priced below the product's current list price of 189.00 \u2014 demonstrates that a sale's price is frozen at the time of sale, not re-read from product - the rule that a sale's price is frozen at the time of sale.",
+      "sales_detail_join": [
+        {
+          "sold_at": "2026-01-05T10:15:00+00:00",
+          "customer_email": "ava.mendez@example.com",
+          "customer_full_name": "Ava Mendez",
+          "product_sku": "KB-ERGO-01",
+          "product_name": "Ergonomic Split Keyboard",
+          "category": "Peripherals",
+          "quantity": 2,
+          "unit_price": "189.00",
+          "line_total": "378.00"
+        },
+        {
+          "sold_at": "2026-01-06T14:30:00+00:00",
+          "customer_email": "liu.wei@example.com",
+          "customer_full_name": "Liu Wei",
+          "product_sku": "MN-27U-4K",
+          "product_name": "27-inch 4K Monitor",
+          "category": "Displays",
+          "quantity": 1,
+          "unit_price": "429.99",
+          "line_total": "429.99"
+        },
+        {
+          "sold_at": "2026-01-07T09:00:00+00:00",
+          "customer_email": "priya.raman@example.com",
+          "customer_full_name": "Priya Raman",
+          "product_sku": "DK-USBC-90W",
+          "product_name": "USB-C Docking Station 90W",
+          "category": "Accessories",
+          "quantity": 3,
+          "unit_price": "245.00",
+          "line_total": "735.00"
+        },
+        {
+          "sold_at": "2026-01-08T16:45:00+00:00",
+          "customer_email": "tomas.novak@example.com",
+          "customer_full_name": "Tomas Novak",
+          "product_sku": "HS-ANC-PRO",
+          "product_name": "Noise-Cancelling Headset",
+          "category": "Audio",
+          "quantity": 1,
+          "unit_price": "312.75",
+          "line_total": "312.75"
+        },
+        {
+          "sold_at": "2026-01-09T11:20:00+00:00",
+          "customer_email": "sara.haddad@example.com",
+          "customer_full_name": "Sara Haddad",
+          "product_sku": "ST-NVME-2TB",
+          "product_name": "2TB NVMe SSD",
+          "category": "Storage",
+          "quantity": 4,
+          "unit_price": "158.40",
+          "line_total": "633.60"
+        },
+        {
+          "sold_at": "2026-01-10T13:00:00+00:00",
+          "customer_email": "jonas.berg@example.com",
+          "customer_full_name": "Jonas Berg",
+          "product_sku": "WC-1080-STR",
+          "product_name": "1080p Streaming Webcam",
+          "category": "Video",
+          "quantity": 2,
+          "unit_price": "96.25",
+          "line_total": "192.50"
+        },
+        {
+          "sold_at": "2026-01-11T08:30:00+00:00",
+          "customer_email": "ava.mendez@example.com",
+          "customer_full_name": "Ava Mendez",
+          "product_sku": "MS-TRACK-02",
+          "product_name": "Trackball Mouse",
+          "category": "Peripherals",
+          "quantity": 1,
+          "unit_price": "79.50",
+          "line_total": "79.50"
+        },
+        {
+          "sold_at": "2026-01-12T10:00:00+00:00",
+          "customer_email": "liu.wei@example.com",
+          "customer_full_name": "Liu Wei",
+          "product_sku": "KB-ERGO-01",
+          "product_name": "Ergonomic Split Keyboard",
+          "category": "Peripherals",
+          "quantity": 1,
+          "unit_price": "175.00",
+          "line_total": "175.00"
+        }
+      ],
+      "distinct_customers_touched": 6,
+      "distinct_products_touched": 7,
+      "reload_inserted_anything": "no"
+    },
+    {
+      "file": "sample-unknown-refs.csv",
+      "rows_submitted": 4,
+      "rows_accepted": 1,
+      "rejected": [
+        {
+          "row": 1,
+          "reason": "UNKNOWN_CUSTOMER",
+          "detail": "nonexistent@example.com"
+        },
+        {
+          "row": 2,
+          "reason": "UNKNOWN_PRODUCT",
+          "detail": "ZZ-NOPE-99"
+        },
+        {
+          "row": 3,
+          "reason": "UNKNOWN_CUSTOMER",
+          "detail": "ghost@example.com"
+        }
+      ],
+      "summed_line_total": "79.50",
+      "sales_detail_join": [
+        {
+          "sold_at": "2026-01-05T10:15:00+00:00",
+          "customer_email": "ava.mendez@example.com",
+          "customer_full_name": "Ava Mendez",
+          "product_sku": "KB-ERGO-01",
+          "product_name": "Ergonomic Split Keyboard",
+          "category": "Peripherals",
+          "quantity": 2,
+          "unit_price": "189.00",
+          "line_total": "378.00"
+        },
+        {
+          "sold_at": "2026-01-05T13:00:00+00:00",
+          "customer_email": "liu.wei@example.com",
+          "customer_full_name": "Liu Wei",
+          "product_sku": "MS-TRACK-02",
+          "product_name": "Trackball Mouse",
+          "category": "Peripherals",
+          "quantity": 1,
+          "unit_price": "79.50",
+          "line_total": "79.50"
+        },
+        {
+          "sold_at": "2026-01-06T14:30:00+00:00",
+          "customer_email": "liu.wei@example.com",
+          "customer_full_name": "Liu Wei",
+          "product_sku": "MN-27U-4K",
+          "product_name": "27-inch 4K Monitor",
+          "category": "Displays",
+          "quantity": 1,
+          "unit_price": "429.99",
+          "line_total": "429.99"
+        },
+        {
+          "sold_at": "2026-01-07T09:00:00+00:00",
+          "customer_email": "priya.raman@example.com",
+          "customer_full_name": "Priya Raman",
+          "product_sku": "DK-USBC-90W",
+          "product_name": "USB-C Docking Station 90W",
+          "category": "Accessories",
+          "quantity": 3,
+          "unit_price": "245.00",
+          "line_total": "735.00"
+        },
+        {
+          "sold_at": "2026-01-08T16:45:00+00:00",
+          "customer_email": "tomas.novak@example.com",
+          "customer_full_name": "Tomas Novak",
+          "product_sku": "HS-ANC-PRO",
+          "product_name": "Noise-Cancelling Headset",
+          "category": "Audio",
+          "quantity": 1,
+          "unit_price": "312.75",
+          "line_total": "312.75"
+        },
+        {
+          "sold_at": "2026-01-09T11:20:00+00:00",
+          "customer_email": "sara.haddad@example.com",
+          "customer_full_name": "Sara Haddad",
+          "product_sku": "ST-NVME-2TB",
+          "product_name": "2TB NVMe SSD",
+          "category": "Storage",
+          "quantity": 4,
+          "unit_price": "158.40",
+          "line_total": "633.60"
+        },
+        {
+          "sold_at": "2026-01-10T13:00:00+00:00",
+          "customer_email": "jonas.berg@example.com",
+          "customer_full_name": "Jonas Berg",
+          "product_sku": "WC-1080-STR",
+          "product_name": "1080p Streaming Webcam",
+          "category": "Video",
+          "quantity": 2,
+          "unit_price": "96.25",
+          "line_total": "192.50"
+        },
+        {
+          "sold_at": "2026-01-11T08:30:00+00:00",
+          "customer_email": "ava.mendez@example.com",
+          "customer_full_name": "Ava Mendez",
+          "product_sku": "MS-TRACK-02",
+          "product_name": "Trackball Mouse",
+          "category": "Peripherals",
+          "quantity": 1,
+          "unit_price": "79.50",
+          "line_total": "79.50"
+        },
+        {
+          "sold_at": "2026-01-12T10:00:00+00:00",
+          "customer_email": "liu.wei@example.com",
+          "customer_full_name": "Liu Wei",
+          "product_sku": "KB-ERGO-01",
+          "product_name": "Ergonomic Split Keyboard",
+          "category": "Peripherals",
+          "quantity": 1,
+          "unit_price": "175.00",
+          "line_total": "175.00"
+        }
+      ],
+      "distinct_customers_touched": 1,
+      "distinct_products_touched": 1,
+      "reload_inserted_anything": "no"
+    },
+    {
+      "file": "sample-bad-values.csv",
+      "rows_submitted": 7,
+      "rows_accepted": 1,
+      "rejected": [
+        {
+          "row": 1,
+          "reason": "MISSING_SOLD_AT",
+          "detail": ""
+        },
+        {
+          "row": 2,
+          "reason": "BAD_QUANTITY",
+          "detail": "0"
+        },
+        {
+          "row": 3,
+          "reason": "BAD_QUANTITY",
+          "detail": "-2"
+        },
+        {
+          "row": 4,
+          "reason": "BAD_UNIT_PRICE",
+          "detail": "-5.00"
+        },
+        {
+          "row": 5,
+          "reason": "BAD_QUANTITY",
+          "detail": "1.5"
+        },
+        {
+          "row": 6,
+          "reason": "BAD_UNIT_PRICE",
+          "detail": "12.999"
+        }
+      ],
+      "summed_line_total": "159.00",
+      "sales_detail_join": [
+        {
+          "sold_at": "2026-01-05T10:15:00+00:00",
+          "customer_email": "ava.mendez@example.com",
+          "customer_full_name": "Ava Mendez",
+          "product_sku": "KB-ERGO-01",
+          "product_name": "Ergonomic Split Keyboard",
+          "category": "Peripherals",
+          "quantity": 2,
+          "unit_price": "189.00",
+          "line_total": "378.00"
+        },
+        {
+          "sold_at": "2026-01-05T11:30:00+00:00",
+          "customer_email": "priya.raman@example.com",
+          "customer_full_name": "Priya Raman",
+          "product_sku": "MS-TRACK-02",
+          "product_name": "Trackball Mouse",
+          "category": "Peripherals",
+          "quantity": 2,
+          "unit_price": "79.50",
+          "line_total": "159.00"
+        },
+        {
+          "sold_at": "2026-01-05T13:00:00+00:00",
+          "customer_email": "liu.wei@example.com",
+          "customer_full_name": "Liu Wei",
+          "product_sku": "MS-TRACK-02",
+          "product_name": "Trackball Mouse",
+          "category": "Peripherals",
+          "quantity": 1,
+          "unit_price": "79.50",
+          "line_total": "79.50"
+        },
+        {
+          "sold_at": "2026-01-06T14:30:00+00:00",
+          "customer_email": "liu.wei@example.com",
+          "customer_full_name": "Liu Wei",
+          "product_sku": "MN-27U-4K",
+          "product_name": "27-inch 4K Monitor",
+          "category": "Displays",
+          "quantity": 1,
+          "unit_price": "429.99",
+          "line_total": "429.99"
+        },
+        {
+          "sold_at": "2026-01-07T09:00:00+00:00",
+          "customer_email": "priya.raman@example.com",
+          "customer_full_name": "Priya Raman",
+          "product_sku": "DK-USBC-90W",
+          "product_name": "USB-C Docking Station 90W",
+          "category": "Accessories",
+          "quantity": 3,
+          "unit_price": "245.00",
+          "line_total": "735.00"
+        },
+        {
+          "sold_at": "2026-01-08T16:45:00+00:00",
+          "customer_email": "tomas.novak@example.com",
+          "customer_full_name": "Tomas Novak",
+          "product_sku": "HS-ANC-PRO",
+          "product_name": "Noise-Cancelling Headset",
+          "category": "Audio",
+          "quantity": 1,
+          "unit_price": "312.75",
+          "line_total": "312.75"
+        },
+        {
+          "sold_at": "2026-01-09T11:20:00+00:00",
+          "customer_email": "sara.haddad@example.com",
+          "customer_full_name": "Sara Haddad",
+          "product_sku": "ST-NVME-2TB",
+          "product_name": "2TB NVMe SSD",
+          "category": "Storage",
+          "quantity": 4,
+          "unit_price": "158.40",
+          "line_total": "633.60"
+        },
+        {
+          "sold_at": "2026-01-10T13:00:00+00:00",
+          "customer_email": "jonas.berg@example.com",
+          "customer_full_name": "Jonas Berg",
+          "product_sku": "WC-1080-STR",
+          "product_name": "1080p Streaming Webcam",
+          "category": "Video",
+          "quantity": 2,
+          "unit_price": "96.25",
+          "line_total": "192.50"
+        },
+        {
+          "sold_at": "2026-01-11T08:30:00+00:00",
+          "customer_email": "ava.mendez@example.com",
+          "customer_full_name": "Ava Mendez",
+          "product_sku": "MS-TRACK-02",
+          "product_name": "Trackball Mouse",
+          "category": "Peripherals",
+          "quantity": 1,
+          "unit_price": "79.50",
+          "line_total": "79.50"
+        },
+        {
+          "sold_at": "2026-01-12T10:00:00+00:00",
+          "customer_email": "liu.wei@example.com",
+          "customer_full_name": "Liu Wei",
+          "product_sku": "KB-ERGO-01",
+          "product_name": "Ergonomic Split Keyboard",
+          "category": "Peripherals",
+          "quantity": 1,
+          "unit_price": "175.00",
+          "line_total": "175.00"
+        }
+      ],
+      "distinct_customers_touched": 1,
+      "distinct_products_touched": 1,
+      "reload_inserted_anything": "no"
+    },
+    {
+      "file": "sample-duplicates.csv",
+      "rows_submitted": 5,
+      "rows_accepted": 2,
+      "rejected": [
+        {
+          "row": 1,
+          "reason": "DUPLICATE_SALE",
+          "detail": "ava.mendez@example.com, KB-ERGO-01, 2026-01-05T10:15:00+00:00"
+        },
+        {
+          "row": 2,
+          "reason": "DUPLICATE_SALE",
+          "detail": "liu.wei@example.com, MN-27U-4K, 2026-01-06T14:30:00+00:00"
+        },
+        {
+          "row": 4,
+          "reason": "DUPLICATE_SALE",
+          "detail": "jonas.berg@example.com, MN-34UW-QHD, 2026-01-15T09:00:00+00:00"
+        }
+      ],
+      "note": "Row 2 conflicts on natural key alone even though its quantity (5) and unit_price (400.00) differ from the row already on file for that (customer, product, sold_at) \u2014 uniqueness is on the natural key only, never the full row. Rows 3 and 4 share a natural key within this same file: row 3 inserts (new), row 4 then conflicts with the row row 3 just committed, inside the same batch.",
+      "summed_line_total": "888.00",
+      "sales_detail_join": [
+        {
+          "sold_at": "2026-01-05T10:15:00+00:00",
+          "customer_email": "ava.mendez@example.com",
+          "customer_full_name": "Ava Mendez",
+          "product_sku": "KB-ERGO-01",
+          "product_name": "Ergonomic Split Keyboard",
+          "category": "Peripherals",
+          "quantity": 2,
+          "unit_price": "189.00",
+          "line_total": "378.00"
+        },
+        {
+          "sold_at": "2026-01-05T11:30:00+00:00",
+          "customer_email": "priya.raman@example.com",
+          "customer_full_name": "Priya Raman",
+          "product_sku": "MS-TRACK-02",
+          "product_name": "Trackball Mouse",
+          "category": "Peripherals",
+          "quantity": 2,
+          "unit_price": "79.50",
+          "line_total": "159.00"
+        },
+        {
+          "sold_at": "2026-01-05T13:00:00+00:00",
+          "customer_email": "liu.wei@example.com",
+          "customer_full_name": "Liu Wei",
+          "product_sku": "MS-TRACK-02",
+          "product_name": "Trackball Mouse",
+          "category": "Peripherals",
+          "quantity": 1,
+          "unit_price": "79.50",
+          "line_total": "79.50"
+        },
+        {
+          "sold_at": "2026-01-06T14:30:00+00:00",
+          "customer_email": "liu.wei@example.com",
+          "customer_full_name": "Liu Wei",
+          "product_sku": "MN-27U-4K",
+          "product_name": "27-inch 4K Monitor",
+          "category": "Displays",
+          "quantity": 1,
+          "unit_price": "429.99",
+          "line_total": "429.99"
+        },
+        {
+          "sold_at": "2026-01-07T09:00:00+00:00",
+          "customer_email": "priya.raman@example.com",
+          "customer_full_name": "Priya Raman",
+          "product_sku": "DK-USBC-90W",
+          "product_name": "USB-C Docking Station 90W",
+          "category": "Accessories",
+          "quantity": 3,
+          "unit_price": "245.00",
+          "line_total": "735.00"
+        },
+        {
+          "sold_at": "2026-01-08T16:45:00+00:00",
+          "customer_email": "tomas.novak@example.com",
+          "customer_full_name": "Tomas Novak",
+          "product_sku": "HS-ANC-PRO",
+          "product_name": "Noise-Cancelling Headset",
+          "category": "Audio",
+          "quantity": 1,
+          "unit_price": "312.75",
+          "line_total": "312.75"
+        },
+        {
+          "sold_at": "2026-01-09T11:20:00+00:00",
+          "customer_email": "sara.haddad@example.com",
+          "customer_full_name": "Sara Haddad",
+          "product_sku": "ST-NVME-2TB",
+          "product_name": "2TB NVMe SSD",
+          "category": "Storage",
+          "quantity": 4,
+          "unit_price": "158.40",
+          "line_total": "633.60"
+        },
+        {
+          "sold_at": "2026-01-10T13:00:00+00:00",
+          "customer_email": "jonas.berg@example.com",
+          "customer_full_name": "Jonas Berg",
+          "product_sku": "WC-1080-STR",
+          "product_name": "1080p Streaming Webcam",
+          "category": "Video",
+          "quantity": 2,
+          "unit_price": "96.25",
+          "line_total": "192.50"
+        },
+        {
+          "sold_at": "2026-01-11T08:30:00+00:00",
+          "customer_email": "ava.mendez@example.com",
+          "customer_full_name": "Ava Mendez",
+          "product_sku": "MS-TRACK-02",
+          "product_name": "Trackball Mouse",
+          "category": "Peripherals",
+          "quantity": 1,
+          "unit_price": "79.50",
+          "line_total": "79.50"
+        },
+        {
+          "sold_at": "2026-01-12T10:00:00+00:00",
+          "customer_email": "liu.wei@example.com",
+          "customer_full_name": "Liu Wei",
+          "product_sku": "KB-ERGO-01",
+          "product_name": "Ergonomic Split Keyboard",
+          "category": "Peripherals",
+          "quantity": 1,
+          "unit_price": "175.00",
+          "line_total": "175.00"
+        },
+        {
+          "sold_at": "2026-01-15T09:00:00+00:00",
+          "customer_email": "jonas.berg@example.com",
+          "customer_full_name": "Jonas Berg",
+          "product_sku": "MN-34UW-QHD",
+          "product_name": "34-inch Ultrawide QHD Monitor",
+          "category": "Displays",
+          "quantity": 1,
+          "unit_price": "699.00",
+          "line_total": "699.00"
+        },
+        {
+          "sold_at": "2026-01-16T10:00:00+00:00",
+          "customer_email": "sara.haddad@example.com",
+          "customer_full_name": "Sara Haddad",
+          "product_sku": "KB-ERGO-01",
+          "product_name": "Ergonomic Split Keyboard",
+          "category": "Peripherals",
+          "quantity": 1,
+          "unit_price": "189.00",
+          "line_total": "189.00"
+        }
+      ],
+      "distinct_customers_touched": 2,
+      "distinct_products_touched": 2,
+      "reload_inserted_anything": "no"
+    },
+    {
+      "file": "sample-sales.csv",
+      "rows_submitted": 24,
+      "rows_accepted": 16,
+      "rejected": [
+        {
+          "row": 17,
+          "reason": "UNKNOWN_PRODUCT",
+          "detail": "MN-32C-OLED"
+        },
+        {
+          "row": 18,
+          "reason": "UNKNOWN_CUSTOMER",
+          "detail": "nadia.khoury@example.com"
+        },
+        {
+          "row": 19,
+          "reason": "MISSING_SOLD_AT",
+          "detail": ""
+        },
+        {
+          "row": 20,
+          "reason": "BAD_QUANTITY",
+          "detail": "0"
+        },
+        {
+          "row": 21,
+          "reason": "BAD_QUANTITY",
+          "detail": "-3"
+        },
+        {
+          "row": 22,
+          "reason": "BAD_UNIT_PRICE",
+          "detail": "-79.50"
+        },
+        {
+          "row": 23,
+          "reason": "DUPLICATE_SALE",
+          "detail": "ava.mendez@example.com, KB-ERGO-01, 2026-07-01T09:15:00+00:00"
+        },
+        {
+          "row": 24,
+          "reason": "DUPLICATE_SALE",
+          "detail": "liu.wei@example.com, MN-27U-4K, 2026-07-01T11:40:00+00:00"
+        }
+      ],
+      "summed_line_total": "7503.46",
+      "distinct_customers_touched": 6,
+      "distinct_products_touched": 8,
+      "reload_inserted_anything": "no",
+      "note": "Added in step 9 (was missing from the original 4-file reference set built in step 5, before this file existed). July 2026 dates never collide with the other four files' January 2026 dates, so these figures are identical whether this file is loaded alone against a fresh database (step 6's interactive report and sales-detail.csv) or last in the shared five-file sequence below \u2014 verified both ways (steps 6, 7, 8, and again here).",
+      "sales_detail_join": [
+        {
+          "sold_at": "2026-07-01T09:15:00Z",
+          "customer_email": "ava.mendez@example.com",
+          "customer_full_name": "Ava Mendez",
+          "product_sku": "KB-ERGO-01",
+          "product_name": "Ergonomic Split Keyboard",
+          "category": "Peripherals",
+          "quantity": 2,
+          "unit_price": "189.00",
+          "line_total": "378.00"
+        },
+        {
+          "sold_at": "2026-07-01T11:40:00Z",
+          "customer_email": "liu.wei@example.com",
+          "customer_full_name": "Liu Wei",
+          "product_sku": "MN-27U-4K",
+          "product_name": "27-inch 4K Monitor",
+          "category": "Displays",
+          "quantity": 1,
+          "unit_price": "429.99",
+          "line_total": "429.99"
+        },
+        {
+          "sold_at": "2026-07-02T08:05:00Z",
+          "customer_email": "priya.raman@example.com",
+          "customer_full_name": "Priya Raman",
+          "product_sku": "DK-USBC-90W",
+          "product_name": "USB-C Docking Station 90W",
+          "category": "Accessories",
+          "quantity": 3,
+          "unit_price": "245.00",
+          "line_total": "735.00"
+        },
+        {
+          "sold_at": "2026-07-02T14:22:00Z",
+          "customer_email": "tomas.novak@example.com",
+          "customer_full_name": "Tomas Novak",
+          "product_sku": "HS-ANC-PRO",
+          "product_name": "Noise-Cancelling Headset",
+          "category": "Audio",
+          "quantity": 1,
+          "unit_price": "312.75",
+          "line_total": "312.75"
+        },
+        {
+          "sold_at": "2026-07-03T10:00:00Z",
+          "customer_email": "sara.haddad@example.com",
+          "customer_full_name": "Sara Haddad",
+          "product_sku": "WC-1080-STR",
+          "product_name": "1080p Streaming Webcam",
+          "category": "Video",
+          "quantity": 4,
+          "unit_price": "96.25",
+          "line_total": "385.00"
+        },
+        {
+          "sold_at": "2026-07-03T16:31:00Z",
+          "customer_email": "jonas.berg@example.com",
+          "customer_full_name": "Jonas Berg",
+          "product_sku": "ST-NVME-2TB",
+          "product_name": "2TB NVMe SSD",
+          "category": "Storage",
+          "quantity": 2,
+          "unit_price": "158.40",
+          "line_total": "316.80"
+        },
+        {
+          "sold_at": "2026-07-05T09:47:00Z",
+          "customer_email": "ava.mendez@example.com",
+          "customer_full_name": "Ava Mendez",
+          "product_sku": "MS-TRACK-02",
+          "product_name": "Trackball Mouse",
+          "category": "Peripherals",
+          "quantity": 1,
+          "unit_price": "79.50",
+          "line_total": "79.50"
+        },
+        {
+          "sold_at": "2026-07-06T13:12:00Z",
+          "customer_email": "liu.wei@example.com",
+          "customer_full_name": "Liu Wei",
+          "product_sku": "MN-34UW-QHD",
+          "product_name": "34-inch Ultrawide QHD Monitor",
+          "category": "Displays",
+          "quantity": 1,
+          "unit_price": "699.00",
+          "line_total": "699.00"
+        },
+        {
+          "sold_at": "2026-07-07T07:58:00Z",
+          "customer_email": "priya.raman@example.com",
+          "customer_full_name": "Priya Raman",
+          "product_sku": "KB-ERGO-01",
+          "product_name": "Ergonomic Split Keyboard",
+          "category": "Peripherals",
+          "quantity": 5,
+          "unit_price": "189.00",
+          "line_total": "945.00"
+        },
+        {
+          "sold_at": "2026-07-08T12:03:00Z",
+          "customer_email": "tomas.novak@example.com",
+          "customer_full_name": "Tomas Novak",
+          "product_sku": "ST-NVME-2TB",
+          "product_name": "2TB NVMe SSD",
+          "category": "Storage",
+          "quantity": 3,
+          "unit_price": "158.40",
+          "line_total": "475.20"
+        },
+        {
+          "sold_at": "2026-07-09T15:26:00Z",
+          "customer_email": "sara.haddad@example.com",
+          "customer_full_name": "Sara Haddad",
+          "product_sku": "MN-27U-4K",
+          "product_name": "27-inch 4K Monitor",
+          "category": "Displays",
+          "quantity": 2,
+          "unit_price": "429.99",
+          "line_total": "859.98"
+        },
+        {
+          "sold_at": "2026-07-10T09:09:00Z",
+          "customer_email": "jonas.berg@example.com",
+          "customer_full_name": "Jonas Berg",
+          "product_sku": "HS-ANC-PRO",
+          "product_name": "Noise-Cancelling Headset",
+          "category": "Audio",
+          "quantity": 1,
+          "unit_price": "312.75",
+          "line_total": "312.75"
+        },
+        {
+          "sold_at": "2026-07-11T10:44:00Z",
+          "customer_email": "ava.mendez@example.com",
+          "customer_full_name": "Ava Mendez",
+          "product_sku": "MN-27U-4K",
+          "product_name": "27-inch 4K Monitor",
+          "category": "Displays",
+          "quantity": 1,
+          "unit_price": "399.99",
+          "line_total": "399.99"
+        },
+        {
+          "sold_at": "2026-07-12T11:17:00Z",
+          "customer_email": "liu.wei@example.com",
+          "customer_full_name": "Liu Wei",
+          "product_sku": "DK-USBC-90W",
+          "product_name": "USB-C Docking Station 90W",
+          "category": "Accessories",
+          "quantity": 2,
+          "unit_price": "219.00",
+          "line_total": "438.00"
+        },
+        {
+          "sold_at": "2026-07-13T08:34:00Z",
+          "customer_email": "priya.raman@example.com",
+          "customer_full_name": "Priya Raman",
+          "product_sku": "WC-1080-STR",
+          "product_name": "1080p Streaming Webcam",
+          "category": "Video",
+          "quantity": 6,
+          "unit_price": "96.25",
+          "line_total": "577.50"
+        },
+        {
+          "sold_at": "2026-07-14T17:52:00Z",
+          "customer_email": "jonas.berg@example.com",
+          "customer_full_name": "Jonas Berg",
+          "product_sku": "MS-TRACK-02",
+          "product_name": "Trackball Mouse",
+          "category": "Peripherals",
+          "quantity": 2,
+          "unit_price": "79.50",
+          "line_total": "159.00"
+        }
+      ]
+    }
+  ],
+  "final": {
+    "total_sales_rows": 28,
+    "total_rows_submitted": 48,
+    "total_rows_rejected": 20,
+    "grand_total_line_total": "11566.30",
+    "sales_detail_join": [
+      {
+        "sold_at": "2026-01-05T10:15:00Z",
+        "customer_email": "ava.mendez@example.com",
+        "customer_full_name": "Ava Mendez",
+        "product_sku": "KB-ERGO-01",
+        "product_name": "Ergonomic Split Keyboard",
+        "category": "Peripherals",
+        "quantity": 2,
+        "unit_price": "189.00",
+        "line_total": "378.00"
+      },
+      {
+        "sold_at": "2026-01-05T11:30:00Z",
+        "customer_email": "priya.raman@example.com",
+        "customer_full_name": "Priya Raman",
+        "product_sku": "MS-TRACK-02",
+        "product_name": "Trackball Mouse",
+        "category": "Peripherals",
+        "quantity": 2,
+        "unit_price": "79.50",
+        "line_total": "159.00"
+      },
+      {
+        "sold_at": "2026-01-05T13:00:00Z",
+        "customer_email": "liu.wei@example.com",
+        "customer_full_name": "Liu Wei",
+        "product_sku": "MS-TRACK-02",
+        "product_name": "Trackball Mouse",
+        "category": "Peripherals",
+        "quantity": 1,
+        "unit_price": "79.50",
+        "line_total": "79.50"
+      },
+      {
+        "sold_at": "2026-01-06T14:30:00Z",
+        "customer_email": "liu.wei@example.com",
+        "customer_full_name": "Liu Wei",
+        "product_sku": "MN-27U-4K",
+        "product_name": "27-inch 4K Monitor",
+        "category": "Displays",
+        "quantity": 1,
+        "unit_price": "429.99",
+        "line_total": "429.99"
+      },
+      {
+        "sold_at": "2026-01-07T09:00:00Z",
+        "customer_email": "priya.raman@example.com",
+        "customer_full_name": "Priya Raman",
+        "product_sku": "DK-USBC-90W",
+        "product_name": "USB-C Docking Station 90W",
+        "category": "Accessories",
+        "quantity": 3,
+        "unit_price": "245.00",
+        "line_total": "735.00"
+      },
+      {
+        "sold_at": "2026-01-08T16:45:00Z",
+        "customer_email": "tomas.novak@example.com",
+        "customer_full_name": "Tomas Novak",
+        "product_sku": "HS-ANC-PRO",
+        "product_name": "Noise-Cancelling Headset",
+        "category": "Audio",
+        "quantity": 1,
+        "unit_price": "312.75",
+        "line_total": "312.75"
+      },
+      {
+        "sold_at": "2026-01-09T11:20:00Z",
+        "customer_email": "sara.haddad@example.com",
+        "customer_full_name": "Sara Haddad",
+        "product_sku": "ST-NVME-2TB",
+        "product_name": "2TB NVMe SSD",
+        "category": "Storage",
+        "quantity": 4,
+        "unit_price": "158.40",
+        "line_total": "633.60"
+      },
+      {
+        "sold_at": "2026-01-10T13:00:00Z",
+        "customer_email": "jonas.berg@example.com",
+        "customer_full_name": "Jonas Berg",
+        "product_sku": "WC-1080-STR",
+        "product_name": "1080p Streaming Webcam",
+        "category": "Video",
+        "quantity": 2,
+        "unit_price": "96.25",
+        "line_total": "192.50"
+      },
+      {
+        "sold_at": "2026-01-11T08:30:00Z",
+        "customer_email": "ava.mendez@example.com",
+        "customer_full_name": "Ava Mendez",
+        "product_sku": "MS-TRACK-02",
+        "product_name": "Trackball Mouse",
+        "category": "Peripherals",
+        "quantity": 1,
+        "unit_price": "79.50",
+        "line_total": "79.50"
+      },
+      {
+        "sold_at": "2026-01-12T10:00:00Z",
+        "customer_email": "liu.wei@example.com",
+        "customer_full_name": "Liu Wei",
+        "product_sku": "KB-ERGO-01",
+        "product_name": "Ergonomic Split Keyboard",
+        "category": "Peripherals",
+        "quantity": 1,
+        "unit_price": "175.00",
+        "line_total": "175.00"
+      },
+      {
+        "sold_at": "2026-01-15T09:00:00Z",
+        "customer_email": "jonas.berg@example.com",
+        "customer_full_name": "Jonas Berg",
+        "product_sku": "MN-34UW-QHD",
+        "product_name": "34-inch Ultrawide QHD Monitor",
+        "category": "Displays",
+        "quantity": 1,
+        "unit_price": "699.00",
+        "line_total": "699.00"
+      },
+      {
+        "sold_at": "2026-01-16T10:00:00Z",
+        "customer_email": "sara.haddad@example.com",
+        "customer_full_name": "Sara Haddad",
+        "product_sku": "KB-ERGO-01",
+        "product_name": "Ergonomic Split Keyboard",
+        "category": "Peripherals",
+        "quantity": 1,
+        "unit_price": "189.00",
+        "line_total": "189.00"
+      },
+      {
+        "sold_at": "2026-07-01T09:15:00Z",
+        "customer_email": "ava.mendez@example.com",
+        "customer_full_name": "Ava Mendez",
+        "product_sku": "KB-ERGO-01",
+        "product_name": "Ergonomic Split Keyboard",
+        "category": "Peripherals",
+        "quantity": 2,
+        "unit_price": "189.00",
+        "line_total": "378.00"
+      },
+      {
+        "sold_at": "2026-07-01T11:40:00Z",
+        "customer_email": "liu.wei@example.com",
+        "customer_full_name": "Liu Wei",
+        "product_sku": "MN-27U-4K",
+        "product_name": "27-inch 4K Monitor",
+        "category": "Displays",
+        "quantity": 1,
+        "unit_price": "429.99",
+        "line_total": "429.99"
+      },
+      {
+        "sold_at": "2026-07-02T08:05:00Z",
+        "customer_email": "priya.raman@example.com",
+        "customer_full_name": "Priya Raman",
+        "product_sku": "DK-USBC-90W",
+        "product_name": "USB-C Docking Station 90W",
+        "category": "Accessories",
+        "quantity": 3,
+        "unit_price": "245.00",
+        "line_total": "735.00"
+      },
+      {
+        "sold_at": "2026-07-02T14:22:00Z",
+        "customer_email": "tomas.novak@example.com",
+        "customer_full_name": "Tomas Novak",
+        "product_sku": "HS-ANC-PRO",
+        "product_name": "Noise-Cancelling Headset",
+        "category": "Audio",
+        "quantity": 1,
+        "unit_price": "312.75",
+        "line_total": "312.75"
+      },
+      {
+        "sold_at": "2026-07-03T10:00:00Z",
+        "customer_email": "sara.haddad@example.com",
+        "customer_full_name": "Sara Haddad",
+        "product_sku": "WC-1080-STR",
+        "product_name": "1080p Streaming Webcam",
+        "category": "Video",
+        "quantity": 4,
+        "unit_price": "96.25",
+        "line_total": "385.00"
+      },
+      {
+        "sold_at": "2026-07-03T16:31:00Z",
+        "customer_email": "jonas.berg@example.com",
+        "customer_full_name": "Jonas Berg",
+        "product_sku": "ST-NVME-2TB",
+        "product_name": "2TB NVMe SSD",
+        "category": "Storage",
+        "quantity": 2,
+        "unit_price": "158.40",
+        "line_total": "316.80"
+      },
+      {
+        "sold_at": "2026-07-05T09:47:00Z",
+        "customer_email": "ava.mendez@example.com",
+        "customer_full_name": "Ava Mendez",
+        "product_sku": "MS-TRACK-02",
+        "product_name": "Trackball Mouse",
+        "category": "Peripherals",
+        "quantity": 1,
+        "unit_price": "79.50",
+        "line_total": "79.50"
+      },
+      {
+        "sold_at": "2026-07-06T13:12:00Z",
+        "customer_email": "liu.wei@example.com",
+        "customer_full_name": "Liu Wei",
+        "product_sku": "MN-34UW-QHD",
+        "product_name": "34-inch Ultrawide QHD Monitor",
+        "category": "Displays",
+        "quantity": 1,
+        "unit_price": "699.00",
+        "line_total": "699.00"
+      },
+      {
+        "sold_at": "2026-07-07T07:58:00Z",
+        "customer_email": "priya.raman@example.com",
+        "customer_full_name": "Priya Raman",
+        "product_sku": "KB-ERGO-01",
+        "product_name": "Ergonomic Split Keyboard",
+        "category": "Peripherals",
+        "quantity": 5,
+        "unit_price": "189.00",
+        "line_total": "945.00"
+      },
+      {
+        "sold_at": "2026-07-08T12:03:00Z",
+        "customer_email": "tomas.novak@example.com",
+        "customer_full_name": "Tomas Novak",
+        "product_sku": "ST-NVME-2TB",
+        "product_name": "2TB NVMe SSD",
+        "category": "Storage",
+        "quantity": 3,
+        "unit_price": "158.40",
+        "line_total": "475.20"
+      },
+      {
+        "sold_at": "2026-07-09T15:26:00Z",
+        "customer_email": "sara.haddad@example.com",
+        "customer_full_name": "Sara Haddad",
+        "product_sku": "MN-27U-4K",
+        "product_name": "27-inch 4K Monitor",
+        "category": "Displays",
+        "quantity": 2,
+        "unit_price": "429.99",
+        "line_total": "859.98"
+      },
+      {
+        "sold_at": "2026-07-10T09:09:00Z",
+        "customer_email": "jonas.berg@example.com",
+        "customer_full_name": "Jonas Berg",
+        "product_sku": "HS-ANC-PRO",
+        "product_name": "Noise-Cancelling Headset",
+        "category": "Audio",
+        "quantity": 1,
+        "unit_price": "312.75",
+        "line_total": "312.75"
+      },
+      {
+        "sold_at": "2026-07-11T10:44:00Z",
+        "customer_email": "ava.mendez@example.com",
+        "customer_full_name": "Ava Mendez",
+        "product_sku": "MN-27U-4K",
+        "product_name": "27-inch 4K Monitor",
+        "category": "Displays",
+        "quantity": 1,
+        "unit_price": "399.99",
+        "line_total": "399.99"
+      },
+      {
+        "sold_at": "2026-07-12T11:17:00Z",
+        "customer_email": "liu.wei@example.com",
+        "customer_full_name": "Liu Wei",
+        "product_sku": "DK-USBC-90W",
+        "product_name": "USB-C Docking Station 90W",
+        "category": "Accessories",
+        "quantity": 2,
+        "unit_price": "219.00",
+        "line_total": "438.00"
+      },
+      {
+        "sold_at": "2026-07-13T08:34:00Z",
+        "customer_email": "priya.raman@example.com",
+        "customer_full_name": "Priya Raman",
+        "product_sku": "WC-1080-STR",
+        "product_name": "1080p Streaming Webcam",
+        "category": "Video",
+        "quantity": 6,
+        "unit_price": "96.25",
+        "line_total": "577.50"
+      },
+      {
+        "sold_at": "2026-07-14T17:52:00Z",
+        "customer_email": "jonas.berg@example.com",
+        "customer_full_name": "Jonas Berg",
+        "product_sku": "MS-TRACK-02",
+        "product_name": "Trackball Mouse",
+        "category": "Peripherals",
+        "quantity": 2,
+        "unit_price": "79.50",
+        "line_total": "159.00"
+      }
+    ],
+    "note": "Full cumulative join across all five files, in load_order, against one fresh database (db/schema.sql + db/seed.sql, nothing else) \u2014 matches variance-report.xlsx's Repeatability sheet (sales_count=28, summed_line_total=11566.30) exactly; that figure was independently confirmed identical across all ten step-8 rebuilds."
+  }
+}

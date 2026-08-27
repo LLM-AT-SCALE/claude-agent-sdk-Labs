@@ -1,0 +1,9 @@
+customer_email,sku,quantity,unit_price,sold_at
+ava.mendez@example.com,KB-ERGO-01,2,189.00,2026-01-05T10:15:00Z
+liu.wei@example.com,MN-27U-4K,1,429.99,2026-01-06T14:30:00Z
+priya.raman@example.com,DK-USBC-90W,3,245.00,2026-01-07T09:00:00Z
+tomas.novak@example.com,HS-ANC-PRO,1,312.75,2026-01-08T16:45:00Z
+sara.haddad@example.com,ST-NVME-2TB,4,158.40,2026-01-09T11:20:00Z
+jonas.berg@example.com,WC-1080-STR,2,96.25,2026-01-10T13:00:00Z
+ava.mendez@example.com,MS-TRACK-02,1,79.50,2026-01-11T08:30:00Z
+liu.wei@example.com,KB-ERGO-01,1,175.00,2026-01-12T10:00:00Z

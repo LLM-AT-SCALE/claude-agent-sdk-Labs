@@ -1,0 +1,5 @@
+customer_email,sku,quantity,unit_price,sold_at
+nonexistent@example.com,KB-ERGO-01,1,189.00,2026-01-05T10:00:00Z
+ava.mendez@example.com,ZZ-NOPE-99,1,50.00,2026-01-05T11:00:00Z
+ghost@example.com,GHOST-SKU-01,2,10.00,2026-01-05T12:00:00Z
+liu.wei@example.com,MS-TRACK-02,1,79.50,2026-01-05T13:00:00Z

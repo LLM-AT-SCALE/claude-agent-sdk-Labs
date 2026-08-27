@@ -10,23 +10,23 @@ disk.
 
 ## Labs
 
-| Lab | Title | Surfaces | Problem |
-|---|---|---|---|
-| [Lab-1](Lab-1) | Loan Application Evaluation | Messages API · Agent SDK | Score a commercial loan application narrative against the Five C's of Credit |
+| Lab | Title | Surfaces | Problem | Open |
+|---|---|---|---|---|
+| [Lab-1](Lab-1) | Loan Application Evaluation | Messages API · Agent SDK | Score a commercial loan application narrative against the Five C's of Credit | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/chetankumarmk56/Claude-Agentic-SDK-Labs/blob/main/Lab-1/Lab_1.ipynb) |
+| [Lab-2](Lab-2) | DB Operations | Messages API · tool use | Record customers, products and sales in an insert-only Postgres database, through forms or through chat | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/chetankumarmk56/Claude-Agentic-SDK-Labs/blob/main/Lab-2/Lab_2.ipynb) |
 
 ## Running a lab
 
-Open the lab's notebook in Colab and run the cells in order:
+Click a badge above — it opens that lab's notebook straight in Colab. Run the
+cells in order; the first one clones the lab into the session.
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/chetankumarmk56/Claude-Agentic-SDK-Labs/blob/main/Lab-1/Lab_1.ipynb)
-
-Or clone just one lab:
+Or clone just one lab and run it locally:
 
 ```bash
 git clone --depth 1 --filter=blob:none --sparse https://github.com/chetankumarmk56/Claude-Agentic-SDK-Labs.git
 cd Claude-Agentic-SDK-Labs
-git sparse-checkout set Lab-1
-cd Lab-1
+git sparse-checkout set Lab-2          # or Lab-1
+cd Lab-2
 pip install -r requirements.txt
 streamlit run app.py
 ```
@@ -36,18 +36,20 @@ streamlit run app.py
 - A Google account and Chrome, for Colab
 - An **Anthropic API key** — [console.anthropic.com](https://console.anthropic.com/settings/keys)
 - An **ngrok authtoken**, free, only for the Streamlit step — [dashboard.ngrok.com](https://dashboard.ngrok.com/get-started/your-authtoken)
+- For Lab 2 only: a free **Neon Postgres** project — [console.neon.tech](https://console.neon.tech)
 
-## On API keys
+## On secrets
 
-Every lab prompts for the key when it runs:
+Every lab prompts for what it needs when it runs — the Anthropic key in both
+labs, and in Lab 2 the database connection string as well:
 
-- **In the notebook** — `getpass.getpass()`, so the key never appears in cell output
-  and is never saved with the file
+- **In the notebook** — `getpass.getpass()`, so nothing appears in cell output
+  and nothing is saved with the file
 - **In the app** — `st.text_input(type="password")`, validated once before use
 
-No lab reads a `.env`, and no key belongs in this repository. `.gitignore` blocks
-`.env` files as a second line of defence, but the first line is that the code
-never looks for one.
+No lab reads a `.env`, and no credential belongs in this repository.
+`.gitignore` blocks `.env` files as a second line of defence, but the first line
+is that the code never looks for one.
 
 ## Disclaimer
 

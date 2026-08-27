@@ -1,0 +1,21 @@
+sqlalchemy>=2.0,<3.0
+psycopg[binary]>=3.1,<4.0
+fastapi>=0.115,<1.0
+python-multipart>=0.0.9,<1.0
+uvicorn[standard]>=0.30,<1.0
+# Pinned exactly: streamlit >=1.59 switched its embedded server from
+# Tornado to Starlette, which pulls in a starlette version newer than
+# fastapi's own pin (starlette<0.42) — the two can't coexist in one
+# environment. 1.38.0 is still on Tornado.
+streamlit==1.38.0
+requests>=2.31,<3.0
+httpx>=0.27,<1.0
+pytest>=8.0,<9.0
+
+# AI chat mode (ui/chat.py) — natural-language INSERT/SELECT via tool use.
+# Never used to build SQL; every tool call is an HTTP request to api/.
+anthropic>=0.40,<1.0
+
+# Report-generation tooling only (e.g. run-report.xlsx) — not an
+# application runtime dependency.
+openpyxl>=3.1,<4.0
