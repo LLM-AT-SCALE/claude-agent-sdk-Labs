@@ -161,6 +161,20 @@ def decision_panel(summary: dict) -> None:
         )
 
 
+def split_metric(value: str) -> tuple[str, str]:
+    """Separate the headline figure from the working that produced it.
+
+    Claude returns metrics like "1.28x (computed: $1,280,000 Adjusted EBITDA /
+    $1,000,000 total annual debt service)". Rendering that whole string at
+    display size wraps it over five lines and throws the card grid out of
+    alignment, so the figure and its working are shown at different weights.
+    """
+    head, sep, rest = value.partition("(")
+    if not sep:
+        return value.strip(), ""
+    return head.strip(), rest.rstrip(")").strip()
+
+
 def metrics_row(metrics: dict) -> None:
     """DSCR, LTV and equity injection as Claude read or computed them."""
     cards = []
@@ -171,10 +185,13 @@ def metrics_row(metrics: dict) -> None:
     ):
         value = (metrics or {}).get(key) or "Not stated"
         absent = value.strip().lower() in {"not stated", "n/e", "none", ""}
+        head, detail = split_metric(value)
+        detail_html = f'<div class="metric-detail">{_esc(detail)}</div>' if detail else ""
         cards.append(
             f"""<div class="metric">
                   <div class="metric-label">{_esc(label)}</div>
-                  <div class="metric-value {"metric-absent" if absent else ""}">{_esc(value)}</div>
+                  <div class="metric-value {"metric-absent" if absent else ""}">{_esc(head)}</div>
+                  {detail_html}
                   <div class="metric-sub">{"no evidence" if absent else "from the narrative"}</div>
                 </div>"""
         )

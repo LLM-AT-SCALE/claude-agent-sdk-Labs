@@ -10,6 +10,7 @@ Markup lives in src/ui.py so this file reads as flow rather than HTML.
 from __future__ import annotations
 
 import asyncio
+import time
 from pathlib import Path
 
 import streamlit as st
@@ -213,37 +214,53 @@ def part_b(filename: str, narrative: str, api_key: str) -> None:
     )
 
     if st.button("Run the agent", key="agent_btn"):
-        # The transcript streams live while the agent works, then collapses into
-        # an expander so the memo below is what you actually read. Without this
-        # the agent's closing message and the memo file appear twice, one after
-        # the other, which reads like the app repeated itself.
-        log = st.empty()
+        # A run takes minutes, and the gaps between tool calls are long enough
+        # that a static transcript reads as "stuck". st.status gives a spinner
+        # whose label is rewritten on every message, so there is always visible
+        # movement, and it collapses itself into a click-to-open summary when
+        # the run ends. Expanded on failure, which is when you want to read it.
+        started = time.monotonic()
         lines: list[str] = []
-
-        async def drive() -> None:
-            async for kind, text in run_agent(narrative_path, workspace):
-                prefix = {"tool": "→ ", "result": "✓ ", "text": ""}[kind]
-                lines.append(prefix + text)
-                log.markdown(ui.agent_log(lines[-40:]), unsafe_allow_html=True)
-
-        set_api_key(api_key)
+        tool_calls = 0
         failed = False
-        try:
-            asyncio.run(drive())
-        except Exception as exc:  # noqa: BLE001 - surfaced to the student
-            failed = True
-            st.error(f"The agent stopped: {exc}")
-        finally:
-            clear_api_key()
 
-        log.empty()
-        tool_calls = sum(1 for line in lines if line.startswith("→"))
-        with st.expander(
-            f"Agent transcript — {tool_calls} tool calls, "
-            f"every step the agent chose for itself",
-            expanded=failed,
-        ):
-            st.markdown(ui.agent_log(lines), unsafe_allow_html=True)
+        with st.status("Starting the agent\u2026", expanded=True) as status:
+            log = st.empty()
+
+            async def drive() -> None:
+                nonlocal tool_calls
+                async for kind, text in run_agent(narrative_path, workspace):
+                    prefix = {"tool": "\u2192 ", "result": "\u2713 ", "text": ""}[kind]
+                    lines.append(prefix + text)
+                    if kind == "tool":
+                        tool_calls += 1
+                    status.update(
+                        label=f"Working \u2014 {tool_calls} tool calls \u00b7 "
+                              f"{int(time.monotonic() - started)}s elapsed"
+                    )
+                    log.markdown(ui.agent_log(lines[-40:]), unsafe_allow_html=True)
+
+            set_api_key(api_key)
+            try:
+                asyncio.run(drive())
+            except Exception as exc:  # noqa: BLE001 - surfaced to the student
+                failed = True
+                st.error(f"The agent stopped: {exc}")
+            finally:
+                clear_api_key()
+
+            elapsed = int(time.monotonic() - started)
+            log.markdown(ui.agent_log(lines), unsafe_allow_html=True)
+            status.update(
+                label=(
+                    f"Agent stopped after {elapsed}s"
+                    if failed
+                    else f"Done \u2014 {tool_calls} tool calls in {elapsed}s. "
+                         f"Click to replay every step the agent chose."
+                ),
+                state="error" if failed else "complete",
+                expanded=failed,
+            )
 
         memo = workspace / "credit_memo.md"
         if memo.exists():
