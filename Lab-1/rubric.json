@@ -80,8 +80,12 @@
   ],
   "scoring_method": {
     "formula": "points = (score / 5) * weight",
-    "total": "Sum of all five rubrics. Maximum 100.",
-    "worked_example": "Capacity scored 4 of 5, weight 30 -> (4/5) * 30 = 24 points."
+    "no_evidence": "Score a criterion N/E when the narrative is silent on it. N/E is not a low score: the criterion earns no points AND its weight is removed from the denominator, so the total is renormalised over the weight that was actually evidenced. Never score silence as 1 - level 1 describes a documented weakness, not an absent section.",
+    "total": "total = (points earned / weight evidenced) * 100, rounded half up to a whole number. When every C is scored the denominator is 100 and this is a plain sum. When a C is N/E the denominator shrinks by that C's weight.",
+    "worked_example": "Capacity scored 4 of 5, weight 30 -> (4/5) * 30 = 24 points.",
+    "worked_example_with_ne": "C1 4/20, C2 4/30, C3 3/20, C5 3/10 earn 16 + 24 + 12 + 6 = 58 points. C4 is N/E, so its weight of 20 leaves the denominator: 58 / 80 * 100 = 72.5, which rounds to 73 - APPROVE WITH CONDITIONS.",
+    "rounding": "Round half up, so 72.5 becomes 73. Do not use banker's rounding.",
+    "order_of_operations": "Compute the total, find its decision band, and only then apply the hard rules. A hard rule overrides the band it lands in."
   },
   "decision_bands": [
     { "min": 85, "max": 100, "decision": "APPROVE",                   "note": "Meets policy on all five C's. Proceed to documentation." },
