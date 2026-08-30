@@ -172,6 +172,11 @@ def split_metric(value: str) -> tuple[str, str]:
     head, sep, rest = value.partition("(")
     if not sep:
         return value.strip(), ""
+    # "1.29x computed (...)" -> headline "1.29x", working "computed ..."
+    words = head.split()
+    if len(words) > 1:
+        rest = " ".join(words[1:]) + " " + rest
+        head = words[0]
     return head.strip(), rest.rstrip(")").strip()
 
 
