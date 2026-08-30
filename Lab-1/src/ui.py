@@ -187,13 +187,15 @@ def metrics_row(metrics: dict) -> None:
         absent = value.strip().lower() in {"not stated", "n/e", "none", ""}
         head, detail = split_metric(value)
         detail_html = f'<div class="metric-detail">{_esc(detail)}</div>' if detail else ""
+        # One line, no indentation: a blank or indented line inside this HTML
+        # makes Streamlit's markdown render the rest of it as a code block.
         cards.append(
-            f"""<div class="metric">
-                  <div class="metric-label">{_esc(label)}</div>
-                  <div class="metric-value {"metric-absent" if absent else ""}">{_esc(head)}</div>
-                  {detail_html}
-                  <div class="metric-sub">{"no evidence" if absent else "from the narrative"}</div>
-                </div>"""
+            f'<div class="metric">'
+            f'<div class="metric-label">{_esc(label)}</div>'
+            f'<div class="metric-value {"metric-absent" if absent else ""}">{_esc(head)}</div>'
+            f'{detail_html}'
+            f'<div class="metric-sub">{"no evidence" if absent else "from the narrative"}</div>'
+            f'</div>'
         )
     st.markdown(f'<div class="metrics">{"".join(cards)}</div>', unsafe_allow_html=True)
 
