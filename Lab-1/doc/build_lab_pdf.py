@@ -80,7 +80,7 @@ def original_cover(doc, lab_line: str, title_lines: list, subtitle: str) -> None
     c.drawString(MARGIN_L, 300, "Chetan Kumar M K")
     c.setFillColor(HexColor("#4A463C"))
     c.setFont("Segoe", 18)
-    c.drawString(MARGIN_L, 262, "github.com/chetankumarmk56/Claude-Agentic-SDK-Labs")
+    c.drawString(MARGIN_L, 262, "github.com/LLM-AT-SCALE/claude-agent-sdk-Labs")
 
     c.setStrokeColor(HexColor("#C2BAA5"))
     c.setLineWidth(1.2)
@@ -98,7 +98,7 @@ def original_cover(doc, lab_line: str, title_lines: list, subtitle: str) -> None
 ASSETS = HERE / "assets"
 CODE_DIR = HERE / "code"
 LAB = HERE.parent
-REPO = "https://github.com/chetankumarmk56/Claude-Agentic-SDK-Labs"
+REPO = "https://github.com/LLM-AT-SCALE/claude-agent-sdk-Labs"
 
 
 # --------------------------------------------------------------------- cover
@@ -374,7 +374,6 @@ CODE_SECTIONS = [
         """anthropic==1.0.0
 claude-agent-sdk==0.2.144
 streamlit==1.50.0
-pandas==2.2.2
 python-docx==1.1.2
 pypdf==5.1.0""",
         [
