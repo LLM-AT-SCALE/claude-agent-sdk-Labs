@@ -184,7 +184,7 @@ def metrics_row(metrics: dict) -> None:
         ("Equity injection", "equity_injection"),
     ):
         value = (metrics or {}).get(key) or "Not stated"
-        absent = value.strip().lower() in {"not stated", "n/e", "none", ""}
+        absent = value.strip().lower().startswith(("not stated", "not computable", "n/e", "none")) or not value.strip()
         head, detail = split_metric(value)
         detail_html = f'<div class="metric-detail">{_esc(detail)}</div>' if detail else ""
         # One line, no indentation: a blank or indented line inside this HTML
