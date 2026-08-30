@@ -50,6 +50,17 @@ def _esc(value) -> str:
     return html.escape(str(value)) if value is not None else ""
 
 
+def escape_dollars(text: str) -> str:
+    """Stop Streamlit reading dollar amounts as LaTeX.
+
+    Streamlit's markdown treats ``$...$`` as inline maths. A credit memo is full
+    of figures like "$1,280,000 / $1,000,000", so every second dollar sign opens
+    a maths span and the numbers render as stacked LaTeX instead of text.
+    Escaping the sign keeps them as currency.
+    """
+    return text.replace("$", r"\$")
+
+
 def masthead() -> None:
     st.markdown(
         """
@@ -286,11 +297,15 @@ def application_header(result: dict, filename: str) -> None:
 
 
 def agent_log(lines: list[str]) -> str:
-    """Render the agent's progress as a monospace transcript."""
+    """Render the agent's progress as a monospace transcript.
+
+    Dollar signs are escaped for the same reason as in ``escape_dollars``: the
+    agent narrates figures as it works, and unescaped they turn into LaTeX.
+    """
     body = "".join(
-        f'<span class="agent-tool">{_esc(line)}</span>\n'
+        f'<span class="agent-tool">{escape_dollars(_esc(line))}</span>\n'
         if line.startswith("→") or line.startswith("->")
-        else f"{_esc(line)}\n"
+        else f"{escape_dollars(_esc(line))}\n"
         for line in lines
     )
     return f'<div class="agent-log">{body}</div>'

@@ -66,6 +66,7 @@ def api_key_gate() -> str | None:
         st.markdown(
             '<div style="font-size:14px;font-weight:600;margin-top:6px;">Anthropic API key</div>'
             '<div style="font-size:12.5px;color:var(--ink-faint);">'
+            'Provided in your lab guide &mdash; otherwise '
             'console.anthropic.com &rarr; API keys</div>',
             unsafe_allow_html=True,
         )
@@ -202,7 +203,20 @@ def part_b(filename: str, narrative: str, api_key: str) -> None:
     narrative_path = workspace / f"{Path(filename).stem}.txt"
     narrative_path.write_text(narrative, encoding="utf-8")
 
+    st.markdown(
+        '<p class="sec-note">The agent may use four tools — <code>Read</code>, '
+        '<code>Write</code>, <code>Glob</code> and <code>Grep</code>. Anything else is '
+        'refused. If you see it try <code>Bash</code> and get turned down, that is the '
+        'permission boundary working, not an error: it simply does the arithmetic by '
+        'hand instead.</p>',
+        unsafe_allow_html=True,
+    )
+
     if st.button("Run the agent", key="agent_btn"):
+        # The transcript streams live while the agent works, then collapses into
+        # an expander so the memo below is what you actually read. Without this
+        # the agent's closing message and the memo file appear twice, one after
+        # the other, which reads like the app repeated itself.
         log = st.empty()
         lines: list[str] = []
 
@@ -213,19 +227,43 @@ def part_b(filename: str, narrative: str, api_key: str) -> None:
                 log.markdown(ui.agent_log(lines[-40:]), unsafe_allow_html=True)
 
         set_api_key(api_key)
+        failed = False
         try:
             asyncio.run(drive())
         except Exception as exc:  # noqa: BLE001 - surfaced to the student
+            failed = True
             st.error(f"The agent stopped: {exc}")
         finally:
             clear_api_key()
 
+        log.empty()
+        tool_calls = sum(1 for line in lines if line.startswith("→"))
+        with st.expander(
+            f"Agent transcript — {tool_calls} tool calls, "
+            f"every step the agent chose for itself",
+            expanded=failed,
+        ):
+            st.markdown(ui.agent_log(lines), unsafe_allow_html=True)
+
         memo = workspace / "credit_memo.md"
         if memo.exists():
             text = memo.read_text(encoding="utf-8")
-            ui.section("§ 04", "Credit memo", "Written by the agent, not by this application.")
-            st.markdown(text)
+            ui.section(
+                "§ 04",
+                "Credit memo",
+                "Written by the agent, not by this application. Nobody gave it this "
+                "layout — it chose its own headings, computed the ratios itself, and "
+                "quoted the sentences it scored on.",
+            )
+            # Streamlit reads $...$ as LaTeX, and a credit memo is full of dollar
+            # figures. Escape them or the numbers render as stacked maths.
+            st.markdown(ui.escape_dollars(text))
             st.download_button("Download the memo", text, file_name="credit_memo.md")
+        elif not failed:
+            st.warning(
+                "The agent finished without writing credit_memo.md. Run it again — "
+                "the transcript above shows how far it got."
+            )
 
 
 def main() -> None:
