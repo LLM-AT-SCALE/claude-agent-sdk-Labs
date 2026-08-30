@@ -12,8 +12,8 @@ disk.
 
 | Lab | Title | Surfaces | Problem | Open |
 |---|---|---|---|---|
-| [Lab-1](Lab-1) | Loan Application Evaluation | Messages API · Agent SDK | Score a commercial loan application narrative against the Five C's of Credit | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/chetankumarmk56/Claude-Agentic-SDK-Labs/blob/main/Lab-1/Lab_1.ipynb) |
-| [Lab-2](Lab-2) | DB Operations | Messages API · tool use | Record customers, products and sales in an insert-only Postgres database, through forms or through chat | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/chetankumarmk56/Claude-Agentic-SDK-Labs/blob/main/Lab-2/Lab_2.ipynb) |
+| [Lab-1](Lab-1) | Loan Application Evaluation | Messages API · Agent SDK | Score a commercial loan application narrative against the Five C's of Credit | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/LLM-AT-SCALE/claude-agent-sdk-Labs/blob/main/Lab-1/Lab_1.ipynb) |
+| [Lab-2](Lab-2) | DB Operations | Messages API · tool use | Record customers, products and sales in an insert-only Postgres database, through forms or through chat | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/LLM-AT-SCALE/claude-agent-sdk-Labs/blob/main/Lab-2/Lab_2.ipynb) |
 
 ## Running a lab
 
@@ -23,8 +23,8 @@ cells in order; the first one clones the lab into the session.
 Or clone just one lab and run it locally:
 
 ```bash
-git clone --depth 1 --filter=blob:none --sparse https://github.com/chetankumarmk56/Claude-Agentic-SDK-Labs.git
-cd Claude-Agentic-SDK-Labs
+git clone --depth 1 --filter=blob:none --sparse https://github.com/LLM-AT-SCALE/claude-agent-sdk-Labs.git
+cd claude-agent-sdk-Labs
 git sparse-checkout set Lab-2          # or Lab-1
 cd Lab-2
 pip install -r requirements.txt

@@ -74,7 +74,7 @@ FOOTER_TEXT = BOOTCAMP_FOOTER
 
 ORIGINAL_FOOTER = (
     "Chetan Kumar M K  |  Loan Application Evaluation  |  "
-    "github.com/chetankumarmk56/Claude-Agentic-SDK-Labs"
+    "github.com/LLM-AT-SCALE/claude-agent-sdk-Labs"
 )
 
 

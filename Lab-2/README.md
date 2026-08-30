@@ -8,7 +8,7 @@ chat that reaches the same API through tools.
 > A sale is a historical fact. Once recorded, its price and its time never
 > change — not when the product's price changes, not ever.
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/chetankumarmk56/Claude-Agentic-SDK-Labs/blob/main/Lab-2/Lab_2.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/LLM-AT-SCALE/claude-agent-sdk-Labs/blob/main/Lab-2/Lab_2.ipynb)
 
 ## What it does
 

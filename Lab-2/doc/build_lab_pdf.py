@@ -39,7 +39,7 @@ from layout import (  # noqa: E402
 ASSETS = HERE / "assets"
 CODE_DIR = HERE / "code"
 LAB = HERE.parent
-REPO = "https://github.com/chetankumarmk56/Claude-Agentic-SDK-Labs"
+REPO = "https://github.com/LLM-AT-SCALE/claude-agent-sdk-Labs"
 NOTEBOOK = f"{REPO}/blob/main/Lab-2/Lab_2.ipynb"
 
 
@@ -169,7 +169,7 @@ def cover(doc: Doc) -> None:
     c.drawString(MARGIN_L, 300, "Chetan Kumar M K")
     c.setFillColor(HexColor("#4A463C"))
     c.setFont("Segoe", 18)
-    c.drawString(MARGIN_L, 262, "github.com/chetankumarmk56/Claude-Agentic-SDK-Labs")
+    c.drawString(MARGIN_L, 262, "github.com/LLM-AT-SCALE/claude-agent-sdk-Labs")
 
     c.setStrokeColor(HexColor("#C2BAA5"))
     c.setLineWidth(1.2)
